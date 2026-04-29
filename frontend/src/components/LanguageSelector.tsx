@@ -6,7 +6,13 @@ const languages = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'en', name: 'English', flag: '🇺🇸' },
   { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
   { code: 'ar', name: 'العربية', flag: '🇲🇦' },
+  { code: 'zh-CN', name: '中文', flag: '🇨🇳' },
+  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+  { code: 'ja', name: '日本語', flag: '🇯🇵' },
 ];
 
 export default function LanguageSelector() {
@@ -62,18 +68,20 @@ export default function LanguageSelector() {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
           <div className="absolute right-0 mt-2 w-48 bg-[#1E5C30] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-fade-in">
-            {languages.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => changeLanguage(lang)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors ${
-                  currentLang.code === lang.code ? 'bg-white/5 text-[#F47B20] font-bold' : 'text-white'
-                }`}
-              >
-                <span>{lang.flag}</span>
-                <span>{lang.name}</span>
-              </button>
-            ))}
+            <div className="max-h-80 overflow-y-auto">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => changeLanguage(lang)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors ${
+                    currentLang.code === lang.code ? 'bg-white/5 text-[#F47B20] font-bold' : 'text-white'
+                  }`}
+                >
+                  <span>{lang.flag}</span>
+                  <span>{lang.name}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}
