@@ -1,0 +1,23 @@
+{
+  "name": "Cantine Plus",
+  "short_name": "Cantine+",
+  "description": "La plateforme intelligente de gestion des cantines",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1E5C30",
+  "theme_color": "#328A4A",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

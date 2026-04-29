@@ -1,0 +1,15 @@
+{
+    "python.analysis.typeCheckingMode": "off",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingImports": "none",
+        "reportGeneralTypeIssues": "none",
+        "reportOptionalSubscript": "none",
+        "reportOptionalMemberAccess": "none",
+        "reportPrivateImportUsage": "none",
+        "reportAttributeAccessIssue": "none",
+        "reportIndexIssue": "none",
+        "reportCallIssue": "none",
+        "reportArgumentType": "none",
+        "reportOperatorIssue": "none"
+    }
+}

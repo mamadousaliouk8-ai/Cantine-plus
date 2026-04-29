@@ -3,8 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import LanguageSelector from '../../components/LanguageSelector';
 
-const API = 'http://localhost:8000';
+const API = 'https://cantine-plus-api.onrender.com';
 type User = { id: string; email: string; role: string; name: string };
 type Menu = { id: string; date: string; type: string; entree: string; plat: string; dessert: string; bio: boolean };
 type Commande = { date: string; type: string; ecoles: { nom: string } };
@@ -85,6 +86,9 @@ export default function PrestataireDashboard() {
 
   if (!prestaProfile) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-linear-to-br from-[#1E5C30] to-[#328A4A]">
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
       <Image src="/icone.svg" alt="logo" width={80} height={80} className="mb-0" style={{ marginBottom: '-6px' }} />
       <Image src="/texte.svg" alt="Cantine+" width={200} height={55} className="mb-6" />
       <div className="w-full max-w-md rounded-2xl p-8 bg-white/10 backdrop-blur-md border border-white/20">

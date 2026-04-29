@@ -3,8 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import LanguageSelector from '../../components/LanguageSelector';
 
-const API = 'http://localhost:8000';
+const API = 'https://cantine-plus-api.onrender.com';
 type User = { id: string; email: string; role: string; name: string };
 type Reservation = { id: string; date: string; type: string; status: string; enfants: { nom: string; prenom: string; classe: string; allergies?: string; pai?: string } };
 type Menu = { id: string; date: string; type: string; entree: string; plat: string; dessert: string; bio: boolean };
@@ -66,7 +67,10 @@ export default function EcoleDashboard() {
   if (!user) return <div className="min-h-screen flex items-center justify-center" style={{ background: '#328A4A' }}><p className="text-white">Chargement...</p></div>;
 
   if (!ecoleProfile) return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: 'linear-gradient(135deg, #1E5C30 0%, #328A4A 100%)' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative" style={{ background: 'linear-gradient(135deg, #1E5C30 0%, #328A4A 100%)' }}>
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
       <Image src="/icone.svg" alt="logo" width={80} height={80} style={{ marginBottom: '-6px' }} />
       <Image src="/texte.svg" alt="Cantine+" width={200} height={55} className="mb-6" />
       <div className="w-full max-w-md rounded-2xl p-8" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}>

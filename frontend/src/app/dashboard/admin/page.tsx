@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import LanguageSelector from '../../components/LanguageSelector';
 
-const API = 'http://localhost:8000';
+const API = 'https://cantine-plus-api.onrender.com';
 type User = { id: string; email: string; role: string; name: string };
 type GlobalStats = {
   total_kg_jetes: number;
@@ -45,7 +46,10 @@ export default function AdminDashboard() {
   if (!user || !stats) return <div className="min-h-screen flex items-center justify-center bg-gray-900"><p className="text-white">Chargement du Centre de Contrôle...</p></div>;
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white">
+    <div className="min-h-screen bg-[#1E5C30] text-white p-4 sm:p-8 relative">
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
       <nav className="flex items-center justify-between px-8 py-4 bg-black/40 border-b border-white/5">
         <div className="flex items-center gap-3">
           <Image src="/icone.svg" alt="logo" width={40} height={40} />

@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import LanguageSelector from '../components/LanguageSelector';
 
-const API = 'http://localhost:8000';
+const API = 'https://cantine-plus-api.onrender.com';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -72,8 +73,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #1E5C30 0%, #328A4A 50%, #2A7A40 100%)' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative" style={{ background: 'linear-gradient(135deg, #1E5C30 0%, #328A4A 50%, #2A7A40 100%)' }}>
       
+      {/* Language Selector */}
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
       {/* Logo */}
       <div className="flex flex-col items-center mb-8 animate-fade-in">
         <Image src="/icone.svg" alt="Cantine+ icône" width={120} height={120} className="mb-0" style={{marginBottom: '-8px'}} />
