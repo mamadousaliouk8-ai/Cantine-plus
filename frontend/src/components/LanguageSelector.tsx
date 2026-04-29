@@ -13,6 +13,7 @@ const languages = [
   { code: 'zh-CN', name: '中文', flag: '🇨🇳' },
   { code: 'ru', name: 'Русский', flag: '🇷🇺' },
   { code: 'ja', name: '日本語', flag: '🇯🇵' },
+  { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' },
 ];
 
 export default function LanguageSelector() {
