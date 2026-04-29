@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import LanguageSelector from '../../components/LanguageSelector';
+import LanguageSelector from '../../../components/LanguageSelector';
 
 const API = 'https://cantine-plus-api.onrender.com';
 type User = { id: string; email: string; role: string; name: string };
