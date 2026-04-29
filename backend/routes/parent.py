@@ -6,7 +6,7 @@ import sys
 import os
 
 # Ajouter le chemin vers utils pour importer ai_coach
-sys.path.append(os.path.join(os.path.dirname(__file__), "../../utils"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../utils"))
 from ai_coach import analyze_meal_image, generate_superhero_voice
 
 router = APIRouter()
