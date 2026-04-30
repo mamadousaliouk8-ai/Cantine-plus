@@ -210,23 +210,27 @@ export default function ParentDashboard() {
   if (!user) return <div className="min-h-screen flex items-center justify-center" style={{ background: '#328A4A' }}><p className="text-white text-xl">Chargement...</p></div>;
 
   return (
-    <div className="min-h-screen transition-all duration-700" style={{ background: getSchoolTheme() }}>
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-4" style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+    <div className="min-h-screen transition-all duration-700 relative" style={{ background: getSchoolTheme() }}>
+      {/* Language Selector in top-right corner */}
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
+
+      {/* Navbar - Improved for Mobile */}
+      <nav className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-8 py-4 gap-4" style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
         <div className="flex items-center gap-3">
-          <Image src="/icone.svg" alt="logo" width={50} height={50} style={{ marginBottom: '-4px' }} />
-          <Image src="/texte.svg" alt="Cantine+" width={130} height={35} />
+          <Image src="/icone.svg" alt="logo" width={40} height={40} className="sm:w-[50px] sm:h-[50px]" />
+          <Image src="/texte.svg" alt="Cantine+" width={110} height={30} className="sm:w-[130px] sm:h-[35px]" />
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-white/70 text-sm">👨‍👩‍👧 Espace Parent — {user.name}</span>
-          <button onClick={logout} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all" style={{ background: '#F47B20', color: 'white' }}
-            onMouseEnter={e => (e.target as HTMLElement).style.background = '#1E5C30'} onMouseLeave={e => (e.target as HTMLElement).style.background = '#F47B20'}>
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
+          <span className="text-white/80 text-xs sm:text-sm font-medium bg-white/10 px-3 py-1 rounded-full">👨‍👩‍👧 {user.name}</span>
+          <button onClick={logout} className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-lg transition-all active:scale-95" style={{ background: '#F47B20', color: 'white' }}>
             🚪 Déconnexion
           </button>
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* Tabs */}
         <div className="flex gap-2 mb-8 flex-wrap">
           {tabs.map(t => (

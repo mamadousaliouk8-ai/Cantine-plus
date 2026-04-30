@@ -67,18 +67,19 @@ export default function AdminDashboard() {
       <div className="absolute top-4 right-4 z-50">
         <LanguageSelector />
       </div>
-      <nav className="flex items-center justify-between px-8 py-4 bg-black/40 border-b border-white/5">
+      {/* Navbar - Improved for Mobile */}
+      <nav className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-8 py-4 gap-4 bg-black/40 backdrop-blur-md rounded-2xl border border-white/5 mb-8">
         <div className="flex items-center gap-3">
-          <Image src="/icone.svg" alt="logo" width={40} height={40} />
-          <span className="font-bold text-xl tracking-wider text-transparent bg-clip-text bg-linear-to-r from-green-400 to-blue-500">CANTINE+ SUPERVISION</span>
+          <Image src="/icone.svg" alt="logo" width={35} height={35} className="sm:w-[40px] sm:h-[40px]" />
+          <span className="font-bold text-lg sm:text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">CANTINE+ SUPERVISION</span>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-white/70 text-sm font-mono">ID: {user.id.substring(0,8)}</span>
-          <button onClick={logout} className="px-4 py-2 rounded-lg text-sm font-bold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all">DECONNEXION</button>
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
+          <span className="text-white/70 text-xs sm:text-sm font-mono bg-white/5 px-3 py-1 rounded-full">ID: {user.id.substring(0,8)}</span>
+          <button onClick={logout} className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all">DECONNEXION</button>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <div className="mb-10 text-center">
           <h1 className="text-4xl font-black mb-2 tracking-tight">Impact Global & Performance</h1>
           <p className="text-gray-400 text-lg">Suivi en temps réel de l'écosystème Cantine+</p>
