@@ -7,13 +7,19 @@ export const metadata: Metadata = {
   title: "Cantine+ | La plateforme intelligente de gestion des cantines",
   description: "Moins de gaspillage, plus de sens. La plateforme qui connecte Parents, Écoles et Prestataires.",
   manifest: "/manifest.json",
-  themeColor: "#328A4A",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Cantine+",
   },
+};
+
+export const viewport = {
+  themeColor: "#328A4A",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
