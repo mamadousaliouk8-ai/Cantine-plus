@@ -104,6 +104,7 @@ export default function EcoleDashboard() {
     return 'linear-gradient(135deg, #1E5C30 0%, #328A4A 100%)';
   };
 
+  return (
     <div className="min-h-screen transition-all duration-700 relative" style={{ background: getSchoolTheme() }}>
       {/* Language Selector in top-right corner */}
       <div className="absolute top-4 right-4 z-50">
