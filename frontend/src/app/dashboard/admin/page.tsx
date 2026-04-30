@@ -19,6 +19,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<GlobalStats | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -32,10 +33,20 @@ export default function AdminDashboard() {
         const res = await fetch(`${API}/admin/stats`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
+        if (!res.ok) throw new Error("Impossible de charger les statistiques");
         const data = await res.json();
         setStats(data);
       } catch (err) {
-        console.error("Erreur de chargement des stats");
+        console.error(err);
+        setError("Erreur de communication avec le serveur.");
+        // Fallback stats pour éviter le blocage complet si le serveur est vide
+        setStats({
+          total_kg_jetes: 0,
+          total_invendus_sauves: 0,
+          total_points_ia: 0,
+          total_co2_sauve: 0,
+          users: { parents: 0, ecoles: 0, prestataires: 0 }
+        });
       }
     };
     fetchStats();
@@ -43,7 +54,13 @@ export default function AdminDashboard() {
 
   const logout = () => { localStorage.clear(); router.push('/'); };
 
-  if (!user || !stats) return <div className="min-h-screen flex items-center justify-center bg-gray-900"><p className="text-white">Chargement du Centre de Contrôle...</p></div>;
+  if (!user) return <div className="min-h-screen flex items-center justify-center bg-gray-900"><p className="text-white">Redirection...</p></div>;
+  
+  if (!stats) return <div className="min-h-screen flex flex-col items-center justify-center bg-[#1E5C30]">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-4"></div>
+    <p className="text-white font-medium">Chargement du Centre de Contrôle...</p>
+    {error && <p className="text-red-300 mt-4 text-sm">{error}</p>}
+  </div>;
 
   return (
     <div className="min-h-screen bg-[#1E5C30] text-white p-4 sm:p-8 relative">

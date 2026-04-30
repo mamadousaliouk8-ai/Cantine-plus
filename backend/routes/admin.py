@@ -8,7 +8,7 @@ def get_global_stats():
     try:
         # 1. Total Kilos jetés
         gaspillage_res = supabase.table("gaspillage_ecoles").select("kg_jetes").execute()
-        total_kg_jetes = sum(float(item["kg_jetes"]) for item in gaspillage_res.data) if gaspillage_res.data else 0
+        total_kg_jetes = sum(float(item.get("kg_jetes", 0)) for item in gaspillage_res.data) if gaspillage_res.data else 0
 
         # 2. Total Invendus Sauvés
         reservations_invendus_res = supabase.table("reservations_invendus").select("id").execute()
@@ -22,18 +22,22 @@ def get_global_stats():
         total_co2_sauve = total_invendus_sauves * 2.5
 
         # 5. Utilisateurs actifs
-        parents_res = supabase.table("user_roles").select("id", count="exact").eq("role", "Parent").execute()
-        ecoles_res = supabase.table("user_roles").select("id", count="exact").eq("role", "Ecole").execute()
-        presta_res = supabase.table("user_roles").select("id", count="exact").eq("role", "Prestataire").execute()
-
-        total_parents = parents_res.count if hasattr(parents_res, 'count') and parents_res.count is not None else 0
-        total_ecoles = ecoles_res.count if hasattr(ecoles_res, 'count') and ecoles_res.count is not None else 0
-        total_prestas = presta_res.count if hasattr(presta_res, 'count') and presta_res.count is not None else 0
-
-        # Fallback if count is not returned directly
-        if total_parents == 0 and parents_res.data: total_parents = len(parents_res.data)
-        if total_ecoles == 0 and ecoles_res.data: total_ecoles = len(ecoles_res.data)
-        if total_prestas == 0 and presta_res.data: total_prestas = len(presta_res.data)
+        try:
+            parents_res = supabase.table("user_roles").select("id", count="exact").eq("role", "Parent").execute()
+            ecoles_res = supabase.table("user_roles").select("id", count="exact").eq("role", "Ecole").execute()
+            presta_res = supabase.table("user_roles").select("id", count="exact").eq("role", "Prestataire").execute()
+            
+            total_parents = parents_res.count if hasattr(parents_res, 'count') and parents_res.count is not None else 0
+            total_ecoles = ecoles_res.count if hasattr(ecoles_res, 'count') and ecoles_res.count is not None else 0
+            total_prestas = presta_res.count if hasattr(presta_res, 'count') and presta_res.count is not None else 0
+            
+            # Fallback if count is not returned directly
+            if total_parents == 0 and parents_res.data: total_parents = len(parents_res.data)
+            if total_ecoles == 0 and ecoles_res.data: total_ecoles = len(ecoles_res.data)
+            if total_prestas == 0 and presta_res.data: total_prestas = len(presta_res.data)
+        except Exception:
+            # Si la table user_roles n'existe pas encore ou est inaccessible
+            total_parents = total_ecoles = total_prestas = 0
 
         return {
             "total_kg_jetes": round(total_kg_jetes, 2),
