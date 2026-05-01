@@ -58,7 +58,8 @@ export default function EcoleDashboard() {
         headers: { ...headers, 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ user_id: user!.id, nom: setupNom, prestataire_id: null }) 
       });
-      if (!res.ok) throw new Error('Erreur lors de la création');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Erreur lors de la création');
       setMsg('✅ Profil créé avec succès ! Redirection...');
       setTimeout(() => window.location.reload(), 1500);
     } catch (err: any) {

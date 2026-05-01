@@ -59,7 +59,8 @@ export default function PrestataireDashboard() {
             headers: { ...headers, 'Content-Type': 'application/json' }, 
             body: JSON.stringify({ user_id: user!.id, nom: setupNom }) 
         });
-        if (!res.ok) throw new Error('Erreur API');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Erreur API');
         setMsg('✅ Profil prestataire créé !');
         setTimeout(() => window.location.reload(), 1500);
     } catch {
