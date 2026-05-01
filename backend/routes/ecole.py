@@ -35,10 +35,12 @@ class MessageData(BaseModel):
     titre: str
     contenu: str
 
+from typing import Optional
+
 class EcoleProfileData(BaseModel):
     user_id: str
     nom: str
-    prestataire_id: str = None
+    prestataire_id: Optional[str] = None
 
 @router.get("/messages/{ecole_id}")
 def get_messages(ecole_id: str):
