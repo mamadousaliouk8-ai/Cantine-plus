@@ -61,8 +61,8 @@ export default function EcoleDashboard() {
       if (!res.ok) throw new Error('Erreur lors de la création');
       setMsg('✅ Profil créé avec succès ! Redirection...');
       setTimeout(() => window.location.reload(), 1500);
-    } catch (err) {
-      setMsg('❌ Erreur de connexion au serveur.');
+    } catch (err: any) {
+      setMsg(`❌ Erreur: ${err.message || 'Problème de connexion'}`);
       setLoadingSetup(false);
     }
   };
