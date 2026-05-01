@@ -88,7 +88,14 @@ export default function EcoleDashboard() {
       <Image src="/texte.svg" alt="Cantine+" width={200} height={55} className="mb-6" />
       <div className="w-full max-w-md rounded-2xl p-8" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}>
         <h2 className="text-2xl font-bold text-white mb-2">👋 Bienvenue !</h2>
-        <p className="text-white/70 mb-6">Configurez votre profil École pour commencer.</p>
+        <p className="text-white/70 mb-4">Configurez votre profil École pour commencer.</p>
+        
+        {msg && (
+          <div className={`mb-4 p-3 rounded-xl text-sm font-bold ${msg.includes('❌') ? 'bg-red-500/20 text-red-200' : 'bg-green-500/20 text-green-200'}`}>
+            {msg}
+          </div>
+        )}
+
         <form onSubmit={handleSetup} className="space-y-4">
           <div>
             <label className="block text-white/80 text-sm font-medium mb-1">Nom de votre établissement</label>
