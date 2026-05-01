@@ -35,6 +35,11 @@ class MessageData(BaseModel):
     titre: str
     contenu: str
 
+class EcoleProfileData(BaseModel):
+    user_id: str
+    nom: str
+    prestataire_id: str = None
+
 @router.get("/messages/{ecole_id}")
 def get_messages(ecole_id: str):
     try:
@@ -96,5 +101,13 @@ def get_ecole_profile(user_id: str):
     try:
         res = supabase.table("ecoles").select("*").eq("user_id", user_id).execute()
         return res.data[0] if res.data else None
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/profile")
+def create_ecole_profile(data: EcoleProfileData):
+    try:
+        supabase.table("ecoles").insert(data.dict()).execute()
+        return {"message": "Profil école créé !"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

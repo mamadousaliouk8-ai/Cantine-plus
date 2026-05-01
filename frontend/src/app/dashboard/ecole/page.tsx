@@ -49,9 +49,22 @@ export default function EcoleDashboard() {
   }, [router, fetchData]);
 
   const handleSetup = async (e: React.FormEvent) => {
-    e.preventDefault(); setLoadingSetup(true);
-    await fetch(`${API}/ecole/profile`, { method: 'POST', headers, body: JSON.stringify({ user_id: user!.id, nom: setupNom, prestataire_id: null }) });
-    window.location.reload();
+    e.preventDefault(); 
+    setLoadingSetup(true);
+    setMsg('⏳ Création de votre établissement...');
+    try {
+      const res = await fetch(`${API}/ecole/profile`, { 
+        method: 'POST', 
+        headers: { ...headers, 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ user_id: user!.id, nom: setupNom, prestataire_id: null }) 
+      });
+      if (!res.ok) throw new Error('Erreur lors de la création');
+      setMsg('✅ Profil créé avec succès ! Redirection...');
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      setMsg('❌ Erreur de connexion au serveur.');
+      setLoadingSetup(false);
+    }
   };
 
   const logout = () => { localStorage.clear(); router.push('/'); };

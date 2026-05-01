@@ -50,13 +50,22 @@ export default function PrestataireDashboard() {
   }, [router, fetchData]);
 
   const handleSetup = async (e: React.FormEvent) => {
-    e.preventDefault(); setLoading(true);
-    await fetch(`${API}/prestataire/profile`, { 
-        method: 'POST', 
-        headers: { ...headers, 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ user_id: user!.id, nom: setupNom }) 
-    });
-    window.location.reload();
+    e.preventDefault(); 
+    setLoading(true);
+    setMsg('⏳ Création de votre structure...');
+    try {
+        const res = await fetch(`${API}/prestataire/profile`, { 
+            method: 'POST', 
+            headers: { ...headers, 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ user_id: user!.id, nom: setupNom }) 
+        });
+        if (!res.ok) throw new Error('Erreur API');
+        setMsg('✅ Profil prestataire créé !');
+        setTimeout(() => window.location.reload(), 1500);
+    } catch {
+        setMsg('❌ Impossible de créer le profil.');
+        setLoading(false);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

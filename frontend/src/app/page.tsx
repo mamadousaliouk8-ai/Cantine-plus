@@ -153,7 +153,12 @@ function SubmitButton({ loading, label }: { loading: boolean; label: string }) {
       style={{ background: loading ? '#888' : '#F47B20', cursor: loading ? 'not-allowed' : 'pointer' }}
       onMouseEnter={e => { if (!loading) (e.target as HTMLButtonElement).style.background = '#1E5C30'; }}
       onMouseLeave={e => { if (!loading) (e.target as HTMLButtonElement).style.background = '#F47B20'; }}>
-      {loading ? '⏳ Chargement...' : label}
+      {loading ? (
+        <div className="flex flex-col items-center gap-1">
+          <span>⏳ Chargement...</span>
+          <span className="text-[10px] opacity-70 font-normal">Le serveur Render peut mettre 30s à se réveiller</span>
+        </div>
+      ) : label}
     </button>
   );
 }
