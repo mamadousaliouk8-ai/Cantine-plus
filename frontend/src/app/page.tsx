@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import LanguageSelector from '../components/LanguageSelector';
 
-const API = 'https://cantine-plus-api.onrender.com';
+const API = process.env.NEXT_PUBLIC_API_URL || 'https://cantine-plus-api.onrender.com';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -112,15 +112,19 @@ export default function LoginPage() {
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <label className="block text-white/80 text-sm font-medium mb-1">Je suis un(e)</label>
-              <select value={regRole} onChange={e => setRegRole(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl text-white font-medium focus:outline-none transition-all"
-                style={{ background: '#F47B20', border: 'none', cursor: 'pointer' }}>
-                <option value="Parent">👨‍👩‍👧 Parent</option>
-                <option value="Ecole">🏫 École</option>
-                <option value="Prestataire">👨‍🍳 Prestataire</option>
-                <option value="Admin">🛡️ Super-Admin</option>
-              </select>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'Parent', label: '👨‍👩‍👧 Parent' },
+                  { id: 'Ecole', label: '🏫 École' },
+                  { id: 'Prestataire', label: '👨‍🍳 Presta' },
+                  { id: 'Admin', label: '🛡️ Admin' }
+                ].map(r => (
+                  <button key={r.id} type="button" onClick={() => setRegRole(r.id)}
+                    className={`p-3 rounded-xl border-2 transition-all font-medium text-sm ${regRole === r.id ? 'border-[#F47B20] bg-[#F47B20]/10 text-white' : 'border-white/10 text-white/60 hover:border-white/30'}`}>
+                    {r.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <InputField label="Nom / Prénom ou nom de la structure" type="text" value={regName} onChange={setRegName} placeholder="Ex: Marie Dupont" />
             <InputField label="Email" type="email" value={regEmail} onChange={setRegEmail} placeholder="votre@email.com" />

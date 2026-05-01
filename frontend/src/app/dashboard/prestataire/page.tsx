@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import LanguageSelector from '../../../components/LanguageSelector';
 
-const API = 'https://cantine-plus-api.onrender.com';
+const API = process.env.NEXT_PUBLIC_API_URL || 'https://cantine-plus-api.onrender.com';
 type User = { id: string; email: string; role: string; name: string };
 type Menu = { id: string; date: string; type: string; entree: string; plat: string; dessert: string; bio: boolean };
 type Commande = { date: string; type: string; ecoles: { nom: string } };
