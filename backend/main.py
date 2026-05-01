@@ -6,7 +6,12 @@ app = FastAPI(title="Cantine+ API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://cantine-plus-web.vercel.app", "*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://cantine-plus-web.vercel.app",
+        "https://cantine-plus.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
