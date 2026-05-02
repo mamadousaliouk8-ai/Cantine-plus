@@ -47,13 +47,13 @@ export default function ParentDashboard() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
-  const fetchData = useCallback(async (u: User) => {
+  const fetchData = useCallback(async (userId: string) => {
     const [e, m, ec, inv, res] = await Promise.all([
-      fetch(`${API}/parent/enfants/${u.id}`, { headers }).then(r => r.json()),
+      fetch(`${API}/parent/enfants/${userId}`, { headers }).then(r => r.json()),
       fetch(`${API}/parent/menus`, { headers }).then(r => r.json()),
       fetch(`${API}/parent/ecoles`, { headers }).then(r => r.json()),
       fetch(`${API}/parent/invendus`, { headers }).then(r => r.json()),
-      fetch(`${API}/parent/reservations/${u.id}`, { headers }).then(r => r.json()),
+      fetch(`${API}/parent/reservations/${userId}`, { headers }).then(r => r.json()),
     ]);
     setEnfants(Array.isArray(e) ? e : []);
     setMenus(Array.isArray(m) ? m : []);
@@ -61,7 +61,7 @@ export default function ParentDashboard() {
     setInvendus(Array.isArray(inv) ? inv : []);
     setReservations(Array.isArray(res) ? res : []);
 
-    const ecolesIds = [...new Set((Array.isArray(e) ? e : []).map((en: any) => en.ecole_id))];
+    const ecolesIds = [...new Set((Array.isArray(e) ? e : []).map((en: Enfant) => en.ecole_id as unknown as string))];
     if (ecolesIds.length > 0) {
       try {
         const msgsRes = await Promise.all(ecolesIds.map(id => fetch(`${API}/ecole/messages/${id}`).then(r => r.json())));
@@ -71,10 +71,9 @@ export default function ParentDashboard() {
         const bourseRes = await Promise.all(ecolesIds.map(id => fetch(`${API}/parent/bourse/${id}`, { headers }).then(r => r.json())));
         const allBourse = bourseRes.flat().filter(b => b && b.id);
         setBourse(allBourse);
-      } catch (e) { console.error("Erreur fetches multiples:", e); }
+      } catch (err) { console.error("Erreur fetches multiples:", err); }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [headers]);
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -82,7 +81,7 @@ export default function ParentDashboard() {
     const u = JSON.parse(stored) as User;
     if (u.role !== 'Parent') { router.push('/'); return; }
     setUser(u);
-    fetchData(u);
+    fetchData(u.id);
 
     // Demander l'autorisation pour les notifications Web
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -96,11 +95,10 @@ export default function ParentDashboard() {
 
     const pollNotifications = setInterval(async () => {
       try {
-        const token = localStorage.getItem('token');
-        const headers = { Authorization: `Bearer ${token}` };
+        const h = { Authorization: `Bearer ${localStorage.getItem('token')}` };
         
         // 1. Check Invendus
-        const invRes = await fetch(`${API}/parent/invendus`, { headers });
+        const invRes = await fetch(`${API}/parent/invendus`, { headers: h });
         const invData = await invRes.json();
         if (Array.isArray(invData)) {
           if (invData.length > lastInvendusCount && lastInvendusCount !== 0) {
@@ -112,10 +110,10 @@ export default function ParentDashboard() {
         }
 
         // 2. Check Absences
-        const resRes = await fetch(`${API}/parent/reservations/${u.id}`, { headers });
+        const resRes = await fetch(`${API}/parent/reservations/${u.id}`, { headers: h });
         const resData = await resRes.json();
         if (Array.isArray(resData)) {
-          const currentAbsencesCount = resData.filter((r: any) => r.status === 'Absent').length;
+          const currentAbsencesCount = resData.filter((r: { status: string }) => r.status === 'Absent').length;
           if (currentAbsencesCount > lastAbsencesCount && lastAbsencesCount !== 0) {
             if (Notification.permission === 'granted') {
               new Notification('Alerte Cantine+', { body: '⚠️ Votre enfant a été signalé absent au repas.', icon: '/icone.png' });
@@ -124,7 +122,7 @@ export default function ParentDashboard() {
           lastAbsencesCount = currentAbsencesCount;
         }
 
-      } catch (e) {
+      } catch {
         // Silently fail polling on error
       }
     }, 15000); // Poll every 15s
@@ -136,7 +134,7 @@ export default function ParentDashboard() {
     e.preventDefault(); setLoading(true); setMsg('');
     try {
       await fetch(`${API}/parent/enfants`, { method: 'POST', headers, body: JSON.stringify({ parent_id: user!.id, ecole_id: ecoleId, nom, prenom, classe, age: age ? Number(age) : null, allergies, pai }) });
-      setMsg('✅ Enfant ajouté !'); fetchData(user!);
+      setMsg('✅ Enfant ajouté !'); fetchData(user!.id);
       setNom(''); setPrenom(''); setClasse(''); setEcoleId(''); setAge(''); setAllergies(''); setPai('');
     } catch { setMsg('❌ Erreur lors de l\'ajout.'); } finally { setLoading(false); }
   };
@@ -155,7 +153,7 @@ export default function ParentDashboard() {
     try {
       await fetch(`${API}/parent/enfants/${id}`, { method: 'DELETE', headers });
       setMsg('✅ Enfant supprimé.');
-      fetchData(user!);
+      fetchData(user!.id);
     } catch { setMsg('❌ Erreur lors de la suppression.'); } finally { setLoading(false); }
   };
 

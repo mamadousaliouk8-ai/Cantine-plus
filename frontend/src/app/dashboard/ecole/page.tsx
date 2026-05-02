@@ -25,15 +25,14 @@ export default function EcoleDashboard() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
-  const fetchData = useCallback(async (u: User, ecoleId: string) => {
+  const fetchData = useCallback(async (ecoleId: string) => {
     const [res, m] = await Promise.all([
       fetch(`${API}/ecole/reservations/${ecoleId}`, { headers }).then(r => r.json()),
       fetch(`${API}/ecole/menus`, { headers }).then(r => r.json()),
     ]);
     setReservations(Array.isArray(res) ? res : []);
     setMenus(Array.isArray(m) ? m : []);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [headers]);
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -43,10 +42,9 @@ export default function EcoleDashboard() {
     setUser(u);
     fetch(`${API}/ecole/profile/${u.id}`, { headers })
       .then(r => r.json()).then(p => {
-        if (p) { setEcoleProfile(p); fetchData(u, p.id); }
+        if (p) { setEcoleProfile(p); fetchData(p.id); }
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router, fetchData]);
+  }, [router, fetchData, headers]);
 
   const handleSetup = async (e: React.FormEvent) => {
     e.preventDefault(); 
@@ -62,8 +60,9 @@ export default function EcoleDashboard() {
       if (!res.ok) throw new Error(data.detail || 'Erreur lors de la création');
       setMsg('✅ Profil créé avec succès ! Redirection...');
       setTimeout(() => window.location.reload(), 1500);
-    } catch (err: any) {
-      setMsg(`❌ Erreur: ${err.message || 'Problème de connexion'}`);
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Problème de connexion';
+      setMsg(`❌ Erreur: ${errorMsg}`);
       setLoadingSetup(false);
     }
   };
@@ -208,7 +207,7 @@ export default function EcoleDashboard() {
                               if (!confirm(`Signaler ${r.enfants?.prenom} absent ?`)) return;
                               await fetch(`${API}/ecole/reservations/${r.id}/absent`, { method: 'PUT', headers });
                               setMsg(`✅ Absence signalée pour ${r.enfants?.prenom}`);
-                              fetchData(user!, ecoleProfile.id);
+                              if (ecoleProfile) fetchData(ecoleProfile.id);
                             }}
                           >❌ Absent</button>
                         </div>
@@ -245,7 +244,7 @@ export default function EcoleDashboard() {
                                 if (!confirm("Signaler cet enfant absent ?")) return;
                                 await fetch(`${API}/ecole/reservations/${r.id}/absent`, { method: 'PUT', headers });
                                 setMsg(`✅ Absence signalée pour ${r.enfants?.prenom}`);
-                                fetchData(user!, ecoleProfile.id);
+                                if (ecoleProfile) fetchData(ecoleProfile.id);
                               }}
                               className="text-red-400 hover:text-red-300 text-xs font-bold underline"
                             >

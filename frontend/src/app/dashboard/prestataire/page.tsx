@@ -26,15 +26,14 @@ export default function PrestataireDashboard() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
   const headers = { Authorization: `Bearer ${token}` };
 
-  const fetchData = useCallback(async (u: User, prestaId: string) => {
+  const fetchData = useCallback(async (prestaId: string) => {
     const [m, c] = await Promise.all([
       fetch(`${API}/prestataire/menus/${prestaId}`, { headers }).then(r => r.json()),
       fetch(`${API}/prestataire/commandes/${prestaId}`, { headers }).then(r => r.json()),
     ]);
     setMenus(Array.isArray(m) ? m : []);
     setCommandes(Array.isArray(c) ? c : []);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [headers]);
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -44,10 +43,9 @@ export default function PrestataireDashboard() {
     setUser(u);
     fetch(`${API}/prestataire/profile/${u.id}`, { headers })
       .then(r => r.json()).then(p => {
-        if (p) { setPrestaProfile(p); fetchData(u, p.id); }
+        if (p) { setPrestaProfile(p); fetchData(p.id); }
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router, fetchData]);
+  }, [router, fetchData, headers]);
 
   const handleSetup = async (e: React.FormEvent) => {
     e.preventDefault(); 
@@ -63,8 +61,9 @@ export default function PrestataireDashboard() {
         if (!res.ok) throw new Error(data.detail || 'Erreur API');
         setMsg('✅ Profil prestataire créé !');
         setTimeout(() => window.location.reload(), 1500);
-    } catch {
-        setMsg('❌ Impossible de créer le profil.');
+    } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : 'Impossible de créer le profil.';
+        setMsg(`❌ Erreur: ${errorMsg}`);
         setLoading(false);
     }
   };
@@ -82,9 +81,10 @@ export default function PrestataireDashboard() {
       });
       const data = await res.json();
       setMsg(`✅ ${data.succes} menus importés !`);
-      fetchData(user!, prestaProfile!.id);
-    } catch {
-      setMsg('❌ Erreur lors de l\'import.');
+      if (prestaProfile) fetchData(prestaProfile.id);
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Erreur lors de l\'import.';
+      setMsg(`❌ ${errorMsg}`);
     } finally {
       setLoading(false);
     }
