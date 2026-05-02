@@ -3,8 +3,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from routes import auth, parent, ecole, prestataire, admin
+import os
 
 app = FastAPI(title="Cantine+ API", version="1.0.0")
+
+@app.get("/health")
+def health_check():
+    from db import SUPABASE_KEY
+    service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    return {
+        "status": "online",
+        "key_type": "SERVICE_ROLE" if service_key else "ANON",
+        "key_prefix": SUPABASE_KEY[:10] if SUPABASE_KEY else "None",
+        "env_check": {
+            "has_service_role": bool(service_key),
+            "has_supabase_key": bool(os.environ.get("SUPABASE_KEY"))
+        }
+    }
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
