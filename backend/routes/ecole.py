@@ -116,8 +116,15 @@ def get_ecole_profile(user_id: str):
 
 @router.post("/profile")
 def create_ecole_profile(data: EcoleProfileData):
+    print(f"DEBUG: Tentative de création de profil pour l'école {data.nom}")
     try:
-        supabase.table("ecoles").insert(data.dict()).execute()
-        return {"message": "Profil école créé !"}
+        # On insère manuellement pour être sûr des champs
+        res = supabase.table("ecoles").insert({
+            "user_id": data.user_id,
+            "nom": data.nom,
+            "prestataire_id": data.prestataire_id
+        }).execute()
+        return {"message": "Profil école créé !", "data": res.data}
     except Exception as e:
+        print(f"DEBUG: Erreur création profil ecole: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
