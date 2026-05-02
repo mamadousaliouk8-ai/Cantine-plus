@@ -98,6 +98,14 @@ def add_gaspillage(data: GaspillageData):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/prestataires")
+def get_prestataires():
+    try:
+        res = supabase.table("prestataires").select("id, nom").execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/profile/{user_id}")
 def get_ecole_profile(user_id: str):
     try:

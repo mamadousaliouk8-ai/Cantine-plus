@@ -21,6 +21,8 @@ export default function EcoleDashboard() {
   const [setupNom, setSetupNom] = useState('');
   const [loadingSetup, setLoadingSetup] = useState(false);
   const [pointageMode, setPointageMode] = useState(false);
+  const [prestataires, setPrestataires] = useState<{ id: string; nom: string }[]>([]);
+  const [selectedPresta, setSelectedPresta] = useState('');
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
@@ -34,6 +36,13 @@ export default function EcoleDashboard() {
     setMenus(Array.isArray(m) ? m : []);
   }, [headers]);
 
+  const fetchPrestataires = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/ecole/prestataires`, { headers }).then(r => r.json());
+      setPrestataires(Array.isArray(res) ? res : []);
+    } catch (e) { console.error("Erreur prestataires:", e); }
+  }, [headers]);
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (!stored) { router.push('/'); return; }
@@ -42,9 +51,10 @@ export default function EcoleDashboard() {
     setUser(u);
     fetch(`${API}/ecole/profile/${u.id}`, { headers })
       .then(r => r.json()).then(p => {
-        if (p) { setEcoleProfile(p); fetchData(p.id); }
+        if (p && p.id) { setEcoleProfile(p); fetchData(p.id); }
+        else { fetchPrestataires(); }
       });
-  }, [router, fetchData, headers]);
+  }, [router, fetchData, fetchPrestataires, headers]);
 
   const handleSetup = async (e: React.FormEvent) => {
     e.preventDefault(); 
@@ -54,7 +64,7 @@ export default function EcoleDashboard() {
       const res = await fetch(`${API}/ecole/profile`, { 
         method: 'POST', 
         headers: { ...headers, 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ user_id: user!.id, nom: setupNom, prestataire_id: null }) 
+        body: JSON.stringify({ user_id: user!.id, nom: setupNom, prestataire_id: selectedPresta || null }) 
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Erreur lors de la création');
@@ -99,13 +109,21 @@ export default function EcoleDashboard() {
         <form onSubmit={handleSetup} className="space-y-4">
           <div>
             <label className="block text-white/80 text-sm font-medium mb-1">Nom de votre établissement</label>
-            <input type="text" value={setupNom} onChange={e => setSetupNom(e.target.value)} required
+            <input type="text" value={setupNom} onChange={e => setSetupNom(e.target.value)} required placeholder="Ex: École Pasteur"
               className="w-full px-4 py-3 rounded-xl text-gray-900 font-medium focus:outline-none"
               style={{ background: 'white', caretColor: 'black', border: '2px solid transparent' }}
               onFocus={e => e.target.style.border = '2px solid #F47B20'}
               onBlur={e => e.target.style.border = '2px solid transparent'} />
           </div>
-          <button type="submit" disabled={loadingSetup} className="w-full py-3 rounded-xl font-bold text-white"
+          <div>
+            <label className="block text-white/80 text-sm font-medium mb-1">Votre Prestataire (facultatif)</label>
+            <select value={selectedPresta} onChange={e => setSelectedPresta(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl text-gray-900 font-medium focus:outline-none" style={{ background: 'white' }}>
+              <option value="">-- Aucun / À définir plus tard --</option>
+              {prestataires.map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
+            </select>
+          </div>
+          <button type="submit" disabled={loadingSetup} className="w-full py-4 rounded-xl font-bold text-white transition-all shadow-lg flex items-center justify-center gap-2"
             style={{ background: '#F47B20' }}>
             {loadingSetup ? '⏳...' : '✅ Créer mon profil'}
           </button>
