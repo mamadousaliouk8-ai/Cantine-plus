@@ -119,17 +119,24 @@ export default function LoginPage() {
                   { id: 'Prestataire', label: '👨‍🍳 Presta' },
                   { id: 'Admin', label: '🛡️ Admin' }
                 ].map(r => (
-                  <button key={r.id} type="button" onClick={() => setRegRole(r.id)}
+                  <button key={r.id} type="button" onClick={() => { 
+                    console.log("Rôle sélectionné:", r.id);
+                    setRegRole(r.id); 
+                  }}
                     className={`p-3 rounded-xl border-2 transition-all font-medium text-sm ${regRole === r.id ? 'border-[#F47B20] bg-[#F47B20]/10 text-white' : 'border-white/10 text-white/60 hover:border-white/30'}`}>
                     {r.label}
                   </button>
                 ))}
               </div>
+              <div className="mt-2 text-center">
+                <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Rôle sélectionné : </span>
+                <span className="text-xs text-[#F47B20] font-black uppercase">{regRole}</span>
+              </div>
             </div>
             <InputField label="Nom / Prénom ou nom de la structure" type="text" value={regName} onChange={setRegName} placeholder="Ex: Marie Dupont" />
             <InputField label="Email" type="email" value={regEmail} onChange={setRegEmail} placeholder="votre@email.com" />
             <InputField label="Mot de passe" type="password" value={regPassword} onChange={setRegPassword} placeholder="••••••••" />
-            <SubmitButton loading={loading} label="Créer mon compte" />
+            <SubmitButton loading={loading} label={`Créer mon compte ${regRole}`} />
           </form>
         )}
       </div>
