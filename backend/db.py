@@ -10,9 +10,11 @@ SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 SUPABASE_KEY = SERVICE_KEY or os.environ.get("SUPABASE_KEY")
 
 if SERVICE_KEY:
-    print("DEBUG: Using SUPABASE_SERVICE_ROLE_KEY (RLS Bypass)")
+    prefix = SERVICE_KEY[:4] if SERVICE_KEY else "????"
+    print(f"DEBUG: Using SUPABASE_SERVICE_ROLE_KEY (Starts with: {prefix}...)")
 else:
-    print("DEBUG: Using standard SUPABASE_KEY (RLS Active)")
+    prefix = os.environ.get("SUPABASE_KEY", "")[:4]
+    print(f"DEBUG: Using standard SUPABASE_KEY (Starts with: {prefix}...)")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("WARNING: Supabase credentials missing!")
