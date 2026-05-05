@@ -3,9 +3,17 @@ import "./globals.css";
 
 import Script from "next/script";
 
+declare global {
+  interface Window {
+    google: unknown;
+    googleTranslateElementInit: () => void;
+  }
+}
+
 export const metadata: Metadata = {
   title: "Cantine+ | La plateforme intelligente de gestion des cantines",
-  description: "Moins de gaspillage, plus de sens. La plateforme qui connecte Parents, Écoles et Prestataires.",
+  description:
+    "Moins de gaspillage, plus de sens. La plateforme qui connecte Parents, Écoles et Prestataires.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -22,7 +30,11 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="fr">
       <head>
@@ -30,16 +42,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         {/* Barre de traduction universelle */}
-        <div id="google_translate_element" className="fixed top-0 left-0 z-50 p-2 opacity-80 hover:opacity-100 transition-opacity"></div>
+        <div
+          id="google_translate_element"
+          className="fixed top-0 left-0 z-50 p-2 opacity-80 hover:opacity-100 transition-opacity"
+        ></div>
         {children}
-        <Script strategy="beforeInteractive" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" />
+        <Script
+          strategy="beforeInteractive"
+          src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+        />
         <Script id="google-translate-init" strategy="afterInteractive">
           {`
             function googleTranslateElementInit() {
-              new window.google.translate.TranslateElement({
-                pageLanguage: 'fr',
-                layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
-              }, 'google_translate_element');
+              if (window.google && window.google.translate) {
+                new window.google.translate.TranslateElement({
+                  pageLanguage: 'fr',
+                  layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
+                }, 'google_translate_element');
+              }
             }
           `}
         </Script>

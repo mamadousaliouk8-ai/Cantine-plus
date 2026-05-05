@@ -1,16 +1,16 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'com.cantineplus.app',
-  appName: 'Cantine+',
-  webDir: 'out',
+  appId: "com.cantineplus.app",
+  appName: "Cantine+",
+  webDir: "out",
   server: {
-    url: 'https://cantine-plus-web.vercel.app',
-    cleartext: true
+    url: "https://cantine-plus-web.vercel.app",
+    cleartext: true,
   },
   ios: {
-    contentInset: 'always'
-  }
+    contentInset: "always",
+  },
 };
 
 export default config;

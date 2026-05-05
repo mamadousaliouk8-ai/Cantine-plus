@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends, Header
 from pydantic import BaseModel
 from db import supabase
+from typing import Optional
 
 router = APIRouter()
 
@@ -60,3 +61,22 @@ def sign_out():
         return {"message": "Déconnexion réussie."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+def get_current_user(authorization: Optional[str] = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Token manquant")
+    
+    try:
+        token = authorization.replace("Bearer ", "")
+        res = supabase.auth.get_user(token)
+        if not res.user:
+            raise HTTPException(status_code=401, detail="Session invalide ou expirée")
+        
+        return {
+            "id": res.user.id,
+            "email": res.user.email,
+            "role": res.user.user_metadata.get("role"),
+            "linked_ecole_id": res.user.user_metadata.get("linked_ecole_id")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Erreur d'authentification: {str(e)}")

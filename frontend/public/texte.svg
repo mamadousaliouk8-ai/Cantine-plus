@@ -1,5 +1,26 @@
-<?xml version="1.0" standalone="no"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="115" height="28" viewBox="0 10 115 28" fill="none">
-  <text x="0" y="32" font-family="sans-serif" font-size="26" font-weight="500" letter-spacing="-1" fill="#FFFFFF">cantine</text>
-  <text x="83" y="32" font-family="sans-serif" font-size="26" font-weight="500" fill="#F47B20">+</text>
+<?xml version="1.0" standalone="no" ?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="115"
+  height="28"
+  viewBox="0 10 115 28"
+  fill="none"
+>
+  <text
+    x="0"
+    y="32"
+    font-family="sans-serif"
+    font-size="26"
+    font-weight="500"
+    letter-spacing="-1"
+    fill="#FFFFFF"
+  >cantine</text>
+  <text
+    x="83"
+    y="32"
+    font-family="sans-serif"
+    font-size="26"
+    font-weight="500"
+    fill="#F47B20"
+  >+</text>
 </svg>

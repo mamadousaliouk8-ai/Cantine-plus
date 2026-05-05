@@ -1,14 +1,76 @@
-<?xml version="1.0" standalone="no"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60" fill="none">
-  <rect width="60" height="60" rx="16" fill="#2C8A4A"/>
-  <line x1="20" y1="14" x2="20" y2="26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="25" y1="14" x2="25" y2="26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="30" y1="14" x2="30" y2="26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M20 26 Q20 30 22.5 31 L22.5 46" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-  <path d="M30 26 Q30 30 27.5 31 L27.5 46" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-  <line x1="22.5" y1="46" x2="27.5" y2="46" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M38 14 L38 26 Q38 30 36 31 L36 46" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-  <path d="M38 14 Q43 18 38 26" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <rect x="41" y="9" width="12" height="3.5" rx="1.75" fill="#F47B20"/>
-  <rect x="45.75" y="4.25" width="3.5" height="12" rx="1.75" fill="#F47B20"/>
+<?xml version="1.0" standalone="no" ?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="60"
+  height="60"
+  viewBox="0 0 60 60"
+  fill="none"
+>
+  <rect width="60" height="60" rx="16" fill="#2C8A4A" />
+  <line
+    x1="20"
+    y1="14"
+    x2="20"
+    y2="26"
+    stroke="white"
+    stroke-width="2.5"
+    stroke-linecap="round"
+  />
+  <line
+    x1="25"
+    y1="14"
+    x2="25"
+    y2="26"
+    stroke="white"
+    stroke-width="2.5"
+    stroke-linecap="round"
+  />
+  <line
+    x1="30"
+    y1="14"
+    x2="30"
+    y2="26"
+    stroke="white"
+    stroke-width="2.5"
+    stroke-linecap="round"
+  />
+  <path
+    d="M20 26 Q20 30 22.5 31 L22.5 46"
+    stroke="white"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    fill="none"
+  />
+  <path
+    d="M30 26 Q30 30 27.5 31 L27.5 46"
+    stroke="white"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    fill="none"
+  />
+  <line
+    x1="22.5"
+    y1="46"
+    x2="27.5"
+    y2="46"
+    stroke="white"
+    stroke-width="2.5"
+    stroke-linecap="round"
+  />
+  <path
+    d="M38 14 L38 26 Q38 30 36 31 L36 46"
+    stroke="white"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    fill="none"
+  />
+  <path
+    d="M38 14 Q43 18 38 26"
+    stroke="white"
+    stroke-width="2"
+    stroke-linecap="round"
+    fill="none"
+  />
+  <rect x="41" y="9" width="12" height="3.5" rx="1.75" fill="#F47B20" />
+  <rect x="45.75" y="4.25" width="3.5" height="12" rx="1.75" fill="#F47B20" />
 </svg>

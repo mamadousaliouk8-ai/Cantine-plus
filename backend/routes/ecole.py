@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from pydantic import BaseModel
 from db import supabase
+from routes.auth import get_current_user
 import sys
 import os
 
@@ -8,6 +9,38 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../utils"))
 from ai_waste import analyze_waste_image
 
 router = APIRouter()
+
+@router.post("/create-admin")
+def create_school_admin(data: dict, user: dict = Depends(get_current_user)):
+    if user.get("role") != "Ecole":
+        raise HTTPException(status_code=403, detail="Seules les écoles peuvent créer des admins liés.")
+    
+    email = data.get("email")
+    password = data.get("password")
+    name = data.get("name")
+    ecole_id = data.get("ecole_id")
+
+    if not email or not password or not name:
+        raise HTTPException(status_code=400, detail="Données manquantes.")
+
+    try:
+        from supabase import create_client
+        admin_client = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_SERVICE_ROLE_KEY"))
+        
+        new_user = admin_client.auth.admin.create_user({
+            "email": email,
+            "password": password,
+            "user_metadata": {
+                "role": "Admin",
+                "name": name,
+                "linked_ecole_id": ecole_id
+            },
+            "email_confirm": True
+        })
+        return {"message": "✅ Compte Administrateur (Super Admin lié) créé !", "user": new_user.user}
+    except Exception as e:
+        print(f"CRITICAL Admin Creation Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/analyze-waste")
 async def analyze_waste(file: UploadFile = File(...)):
