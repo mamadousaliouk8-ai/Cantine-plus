@@ -18,17 +18,20 @@ const languages = [
 
 export default function LanguageSelector() {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState(() => {
-    if (typeof window === "undefined") return languages[0];
+  const [mounted, setMounted] = useState(false);
+  const [currentLang, setCurrentLang] = useState(languages[0]);
+
+  useEffect(() => {
+    setMounted(true);
     const cookieValue = document.cookie
       .split("; ")
       .find((row) => row.startsWith("googtrans="));
     if (cookieValue) {
       const code = cookieValue.split("/").pop();
-      return languages.find((l) => l.code === code) || languages[0];
+      const found = languages.find((l) => l.code === code);
+      if (found) setCurrentLang(found);
     }
-    return languages[0];
-  });
+  }, []);
 
   const changeLanguage = (lang: (typeof languages)[0]) => {
     setCurrentLang(lang);
@@ -44,9 +47,7 @@ export default function LanguageSelector() {
     window.location.reload();
   };
 
-  useEffect(() => {
-    // Component mounted
-  }, []);
+  if (!mounted) return null;
 
   return (
     <div className="relative inline-block text-left">

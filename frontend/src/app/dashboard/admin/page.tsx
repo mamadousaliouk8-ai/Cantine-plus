@@ -18,11 +18,20 @@ type GlobalStats = {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [user] = useState<User | null>(() => {
-    if (typeof window === "undefined") return null;
+  const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
     const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
-  });
+    if (stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch (e) {
+        console.error("Parse error", e);
+      }
+    }
+  }, []);
   const [stats, setStats] = useState<GlobalStats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +65,7 @@ export default function AdminDashboard() {
   }, [headers]);
 
   useEffect(() => {
+    if (!mounted) return;
     if (!user) {
       router.push("/");
       return;
@@ -71,6 +81,8 @@ export default function AdminDashboard() {
     localStorage.clear();
     router.push("/");
   };
+
+  if (!mounted) return null;
 
   if (!user)
     return (
@@ -92,9 +104,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#1E5C30] text-white p-4 sm:p-8 relative">
-      <div className="absolute top-4 right-4 z-50">
-        <LanguageSelector />
-      </div>
+
       {/* Navbar - Improved for Mobile */}
       <nav className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-8 py-4 gap-4 bg-black/40 backdrop-blur-md rounded-2xl border border-white/5 mb-8">
         <div className="flex items-center gap-3">
@@ -113,6 +123,7 @@ export default function AdminDashboard() {
           <span className="text-white/70 text-xs sm:text-sm font-mono bg-white/5 px-3 py-1 rounded-full">
             ID: {user.id.substring(0, 8)}
           </span>
+          <LanguageSelector />
           <button
             onClick={logout}
             className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"

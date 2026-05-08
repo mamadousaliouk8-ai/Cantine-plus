@@ -11,6 +11,13 @@ from ai_coach import analyze_meal_image, generate_superhero_voice
 
 router = APIRouter()
 
+from supabase import create_client
+import os
+_url = os.environ.get("SUPABASE_URL")
+_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+admin_client = create_client(_url, _key)
+
+
 @router.post("/analyze")
 async def analyze_tray(
     file: UploadFile = File(...), 
@@ -22,8 +29,8 @@ async def analyze_tray(
         content = await file.read()
         # 1. Analyse Image (avec le nom du personnage et l'âge pour le prompt)
         result_text = analyze_meal_image(content, character_name, age)
-        # 2. Génération Voix (avec l'ID de voix ElevenLabs)
-        audio_b64 = generate_superhero_voice(result_text, voice_id)
+        # 2. Génération Voix (avec l'ID de voix edge-tts)
+        audio_b64 = await generate_superhero_voice(result_text, voice_id)
         
         return {
             "message": result_text,
@@ -57,7 +64,7 @@ class PointsData(BaseModel):
 @router.get("/ecoles")
 def get_ecoles():
     try:
-        res = supabase.table("ecoles").select("*").execute()
+        res = admin_client.table("ecoles").select("*").execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -65,7 +72,7 @@ def get_ecoles():
 @router.get("/enfants/{parent_id}")
 def get_enfants(parent_id: str):
     try:
-        res = supabase.table("enfants").select("*, ecoles(nom)").eq("parent_id", parent_id).execute()
+        res = admin_client.table("enfants").select("*, ecoles(nom)").eq("parent_id", parent_id).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -73,7 +80,7 @@ def get_enfants(parent_id: str):
 @router.post("/enfants")
 def add_enfant(data: EnfantData):
     try:
-        supabase.table("enfants").insert(data.dict()).execute()
+        admin_client.table("enfants").insert(data.dict()).execute()
         return {"message": "Enfant ajouté avec succès !"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -81,7 +88,7 @@ def add_enfant(data: EnfantData):
 @router.delete("/enfants/{enfant_id}")
 def delete_enfant(enfant_id: str):
     try:
-        supabase.table("enfants").delete().eq("id", enfant_id).execute()
+        admin_client.table("enfants").delete().eq("id", enfant_id).execute()
         return {"message": "Enfant supprimé avec succès !"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -90,7 +97,7 @@ def delete_enfant(enfant_id: str):
 def add_points(enfant_id: str, data: PointsData):
     try:
         # Fetch current points
-        res = supabase.table("enfants").select("points").eq("id", enfant_id).execute()
+        res = admin_client.table("enfants").select("points").eq("id", enfant_id).execute()
         if not res.data:
             raise HTTPException(status_code=404, detail="Enfant introuvable")
         
@@ -98,7 +105,7 @@ def add_points(enfant_id: str, data: PointsData):
         new_points = current_points + data.points
         
         # Update points
-        supabase.table("enfants").update({"points": new_points}).eq("id", enfant_id).execute()
+        admin_client.table("enfants").update({"points": new_points}).eq("id", enfant_id).execute()
         return {"message": "Points ajoutés !", "new_points": new_points}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -106,7 +113,7 @@ def add_points(enfant_id: str, data: PointsData):
 @router.get("/menus")
 def get_menus():
     try:
-        res = supabase.table("menus").select("*").order("date").execute()
+        res = admin_client.table("menus").select("*").order("date").execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -114,11 +121,11 @@ def get_menus():
 @router.get("/reservations/{parent_id}")
 def get_parent_reservations(parent_id: str):
     try:
-        enfants_res = supabase.table("enfants").select("id").eq("parent_id", parent_id).execute()
+        enfants_res = admin_client.table("enfants").select("id").eq("parent_id", parent_id).execute()
         enfant_ids = [e["id"] for e in enfants_res.data]
         if not enfant_ids:
             return []
-        res = supabase.table("reservations").select("*").in_("enfant_id", enfant_ids).execute()
+        res = admin_client.table("reservations").select("*").in_("enfant_id", enfant_ids).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -126,7 +133,7 @@ def get_parent_reservations(parent_id: str):
 @router.post("/reservations")
 def add_reservation(data: ReservationData):
     try:
-        supabase.table("reservations").insert({**data.dict(), "status": "Confirmée"}).execute()
+        admin_client.table("reservations").insert({**data.dict(), "status": "Confirmée"}).execute()
         return {"message": "Réservation confirmée !"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -134,7 +141,7 @@ def add_reservation(data: ReservationData):
 @router.get("/invendus")
 def get_invendus():
     try:
-        res = supabase.table("invendus").select("*, ecoles(nom)").gt("quantite", 0).execute()
+        res = admin_client.table("invendus").select("*, ecoles(nom)").gt("quantite", 0).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -143,16 +150,16 @@ def get_invendus():
 def reserve_invendu(invendu_id: int, data: ReservationInvenduData):
     try:
         # Check quantity
-        res = supabase.table("invendus").select("quantite").eq("id", invendu_id).execute()
+        res = admin_client.table("invendus").select("quantite").eq("id", invendu_id).execute()
         if not res.data or res.data[0]["quantite"] <= 0:
             raise HTTPException(status_code=400, detail="Ce panier n'est plus disponible")
         
         # Decrement quantity
         new_quantite = res.data[0]["quantite"] - 1
-        supabase.table("invendus").update({"quantite": new_quantite}).eq("id", invendu_id).execute()
+        admin_client.table("invendus").update({"quantite": new_quantite}).eq("id", invendu_id).execute()
         
         # Save reservation
-        supabase.table("reservations_invendus").insert({
+        admin_client.table("reservations_invendus").insert({
             "parent_id": data.parent_id,
             "invendu_id": invendu_id
         }).execute()
@@ -164,7 +171,7 @@ def reserve_invendu(invendu_id: int, data: ReservationInvenduData):
 @router.put("/reservations/{reservation_id}/cancel")
 def cancel_reservation(reservation_id: str):
     try:
-        supabase.table("reservations").update({"status": "Annulée"}).eq("id", reservation_id).execute()
+        admin_client.table("reservations").update({"status": "Annulée"}).eq("id", reservation_id).execute()
         return {"message": "Réservation annulée. Ce repas part dans la bourse d'échange."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -174,7 +181,7 @@ def get_bourse(ecole_id: str):
     try:
         from datetime import datetime
         today = datetime.now().strftime("%Y-%m-%d")
-        res = supabase.table("reservations").select("*, enfants(nom, prenom, classe)").eq("ecole_id", ecole_id).eq("status", "Annulée").gte("date", today).execute()
+        res = admin_client.table("reservations").select("*, enfants(nom, prenom, classe)").eq("ecole_id", ecole_id).eq("status", "Annulée").gte("date", today).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -185,7 +192,7 @@ class ClaimData(BaseModel):
 @router.put("/bourse/claim/{reservation_id}")
 def claim_bourse(reservation_id: str, data: ClaimData):
     try:
-        supabase.table("reservations").update({
+        admin_client.table("reservations").update({
             "status": "Validée",
             "enfant_id": data.enfant_id
         }).eq("id", reservation_id).execute()

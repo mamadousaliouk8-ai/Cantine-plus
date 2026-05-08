@@ -25,11 +25,20 @@ type Commande = {
 
 export default function PrestataireDashboard() {
   const router = useRouter();
-  const [user] = useState<User | null>(() => {
-    if (typeof window === "undefined") return null;
+  const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
     const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
-  });
+    if (stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch (e) {
+        console.error("Parse error", e);
+      }
+    }
+  }, []);
   const [tab, setTab] = useState("menus");
   const [menus, setMenus] = useState<Menu[]>([]);
   const [commandes, setCommandes] = useState<Commande[]>([]);
@@ -45,9 +54,9 @@ export default function PrestataireDashboard() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const tabs = [
-    { id: "menus", label: "🍽️ Gestion des Menus", icon: "🍽️" },
-    { id: "commandes", label: "📦 Commandes Cuisine", icon: "📦" },
-    { id: "reports", label: "📄 Rapports d'Activité", icon: "📥" },
+    { id: "menus", label: "Gestion des Menus", icon: "🍽️" },
+    { id: "commandes", label: "Commandes Cuisine", icon: "📦" },
+    { id: "reports", label: "Rapports d'Activité", icon: "📥" },
   ];
 
   const generateReport = (period: string) => {
@@ -91,6 +100,7 @@ export default function PrestataireDashboard() {
   );
 
   useEffect(() => {
+    if (!mounted) return;
     if (!user) {
       router.push("/");
       return;
@@ -163,6 +173,8 @@ export default function PrestataireDashboard() {
     localStorage.clear();
     router.push("/");
   };
+
+  if (!mounted) return null;
 
   if (!user)
     return (
@@ -241,6 +253,7 @@ export default function PrestataireDashboard() {
           <span className="text-white/80 text-sm font-medium bg-white/10 px-3 py-1 rounded-full">
             👨‍🍳 {prestaProfile.nom}
           </span>
+          <LanguageSelector />
           <button
             onClick={logout}
             className="px-4 py-2 rounded-xl text-sm font-bold bg-[#F47B20] text-white shadow-lg transition-all active:scale-95"

@@ -141,18 +141,33 @@ def get_prestataires():
 
 @router.get("/profile/{user_id}")
 def get_ecole_profile(user_id: str):
+    print(f"DEBUG: Récupération du profil pour user_id={user_id}")
     try:
-        res = supabase.table("ecoles").select("*").eq("user_id", user_id).execute()
+        from supabase import create_client
+        import os
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        admin_client = create_client(url, key)
+
+        res = admin_client.table("ecoles").select("*").eq("user_id", user_id).execute()
+        print(f"DEBUG: Résultat profil: {res.data}")
         return res.data[0] if res.data else None
     except Exception as e:
+        print(f"DEBUG: Erreur lors de la récupération du profil: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/profile")
 def create_ecole_profile(data: EcoleProfileData):
     print(f"DEBUG: Tentative de création de profil pour l'école {data.nom}")
     try:
-        # On insère manuellement pour être sûr des champs
-        res = supabase.table("ecoles").insert({
+        from supabase import create_client
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        print(f"DEBUG: URL={url}, KEY_PREFIX={key[:10] if key else 'None'}")
+        
+        admin_client = create_client(url, key)
+        
+        res = admin_client.table("ecoles").insert({
             "user_id": data.user_id,
             "nom": data.nom,
             "prestataire_id": data.prestataire_id

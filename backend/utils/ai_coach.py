@@ -36,47 +36,39 @@ def analyze_meal_image(image_bytes, character_name="un Superhéros", age=None):
     age_instruction = f"\nL'enfant qui écoute ce message a {age} ans. Ton vocabulaire, la complexité de tes phrases, ton ton et tes références doivent être STRICTEMENT adaptés au niveau de compréhension d'un enfant de cet âge." if age else ""
 
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         prompt = f"""Tu es {character_name} (un personnage célèbre apprécié des enfants). Analyse cette photo de plateau repas de cantine.{age_instruction}
-Produis un discours atypique, avec des consignes simples tout en respectant les éléments suivants bien en citant les éléments du plateau.
+Produis un discours totalement UNIQUE, TRÈS VARIÉ et CRÉATIF à chaque fois. Ne réutilise JAMAIS la même structure de phrase d'une fois sur l'autre. Invente de nouvelles expressions, des interjections différentes, et des angles originaux pour présenter le repas.
 
-Tu dois formuler une phrase courte résumant le plateau.
-Exemple: "Plateau de cantine avec un repas salé composé de légumes, d’une protéine et d’un accompagnement."
+Tu dois formuler une phrase courte résumant le plateau avec des mots différents à chaque génération.
 
 Bénéfices:
-2 à 4 bénéfices simples et enfantins (ex: "donne de l’énergie pour jouer", "aide à grandir", "soutient la concentration").
+2 à 4 bénéfices simples, mais expliqués de façon imagée, drôle ou surprenante (varie les synonymes pour "énergie", "grandir", "force").
 
 Style vocal:
-Description brève du style vocal recommandé pour le TTS.
+Description brève du style vocal recommandé.
 
 Script TTS:
-Texte final à lire de 35 à 90 mots, très naturel, très positif, facile à comprendre, adapté à un enfant.
+Texte final à lire de 35 à 90 mots. TRES IMPORTANT: Ce script doit être EXTRÊMEMENT différent à chaque exécution. Change le vocabulaire, la façon de dire bonjour, la façon de motiver l'enfant. Sois imprévisible, vivant et parfaitement dans le personnage.
 
 Notes de sécurité:
-Inclure des garde-fous utiles ("éviter toute culpabilisation", "encourager à goûter sans forcer", "ne pas faire de promesse médicale", "adapter le message si le plat est peu identifiable").
+Inclure des garde-fous utiles.
 
 Confiance:
-Nombre entre 0 et 1 (ton niveau de confiance sur l'identification visuelle).
+Nombre entre 0 et 1.
 
 Politique de sécurité et de qualité:
-Tu dois éviter: les injonctions culpabilisantes, les formulations humiliantes, les menaces, la honte corporelle, les injonctions médicales, les affirmations fausses, les références inadaptées à l’enfance, les contenus effrayants, les propos sur le poids, la minceur ou “grossir”, les comparaisons blessantes avec d’autres enfants.
-Tu dois aussi éviter d’inventer: allergies, intolérances, diagnostics, besoins nutritionnels spécifiques, origine exacte d’un plat non visible.
+Évite les formulations culpabilisantes, médicales ou fausses. Reste positif et bienveillant.
 
-Si la photo est mauvaise ou très ambiguë:
-Reste général. Dis simplement que le repas semble contenir plusieurs éléments utiles pour l’énergie et la croissance. Garde un discours positif mais prudent.
+Si la photo est mauvaise:
+Reste général et invente une situation amusante pour expliquer que tu ne vois pas bien ("Mes super-lunettes sont embuées !").
 
-Logique de formulation du script:
-Accroche motivante > Mention du plat ou de ses composants > Association avec énergie/force/concentration/croissance > Invitation douce à goûter et continuer > Clôture héroïque.
-Exemple de logique: "Capitaine, ton assiette est prête pour la mission. Avec [aliment 1] et [aliment 2], tu fais le plein d’énergie..."
-
-Exemples de formulations à favoriser: "mission énergie", "plein de force", "corps en forme", "grandir avec puissance", "bouchées de champion", "repas qui aide à bouger, apprendre et jouer", "goûte avec courage", "continue ta mission".
-Exemples de formulations à éviter: "avale tout", "tu dois finir", "pas le droit de laisser", "sinon tu seras faible", "mange ou tu perds", "les héros finissent tout sans discuter".
+Exemples de formulations à utiliser (MÉLANGE-LES ET INVENTES-EN DE NOUVELLES):
+"wow", "incroyable", "mission secrète", "carburant magique", "potion de croissance", "explosion de saveurs", "waouh", "super-pouvoirs".
+ÉVITE à tout prix de répéter "fais le plein d'énergie", "ton repas est prêt", ou "pour la mission" à chaque fois. Sois créatif !
 
 Cas particuliers:
-Si légumes visibles: Valorise couleur, vitamines, énergie douce, courage de goûter.
-Si protéine visible: Valorise force, muscles, endurance.
-Si dessert visible: Valorise touche fraîche, vitamines, final joyeux.
-Si peu appétissant visuellement: Ne jamais le dire. Trouve un angle positif ("mission du jour", "nouvelle découverte").
+Adapte tes réactions (ex: surprise, enthousiasme débordant, mystère) en fonction des aliments pour ne jamais paraître robotique.
 
 La priorité absolue n'est pas la précision nutritionnelle parfaite, mais la motivation positive, la compréhension immédiate et la fluidité audio.
 
@@ -118,30 +110,24 @@ Exemple de sortie attendue:
     except Exception as e:
         return f"Problème technique de {character_name} : {str(e)}"
 
-def generate_superhero_voice(text, voice_id=None):
+import edge_tts
+
+async def generate_superhero_voice(text, voice_id=None):
     """
-    Génère un fichier audio en base64.
-    Utilise ElevenLabs si dispo et si voice_id fourni, sinon gTTS.
+    Génère un fichier audio en base64 via edge-tts (voix neuronales gratuites).
     """
     try:
-        if client_eleven and voice_id and voice_id != "default":
-            # Utilisation ElevenLabs
-            audio_iter = client_eleven.generate(
-                text=text,
-                voice=voice_id,
-                model="eleven_multilingual_v2"
-            )
-            audio_bytes = b"".join(audio_iter)
-            audio_b64 = base64.b64encode(audio_bytes).decode()
-            return audio_b64
+        # Fallback par défaut si aucune voix n'est sélectionnée
+        voice = voice_id if voice_id and voice_id != "default" else "fr-FR-JeromeNeural"
         
-        # Fallback gTTS
-        tts = gTTS(text=text, lang='fr')
-        fp = io.BytesIO()
-        tts.write_to_fp(fp)
-        fp.seek(0)
-        audio_b64 = base64.b64encode(fp.read()).decode()
+        communicate = edge_tts.Communicate(text, voice)
+        audio_data = b""
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_data += chunk["data"]
+                
+        audio_b64 = base64.b64encode(audio_data).decode()
         return audio_b64
     except Exception as e:
-        print(f"Erreur Audio: {e}")
+        print(f"Erreur Audio (edge-tts): {e}")
         return None

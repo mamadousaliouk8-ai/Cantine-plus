@@ -45,11 +45,20 @@ const getBadge = (points: number) => {
 
 export default function ParentDashboard() {
   const router = useRouter();
-  const [user] = useState<User | null>(() => {
-    if (typeof window === "undefined") return null;
+  const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
     const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
-  });
+    if (stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch (e) {
+        console.error("Parse error", e);
+      }
+    }
+  }, []);
   const [tab, setTab] = useState("enfants");
   const [enfants, setEnfants] = useState<Enfant[]>([]);
   const [messages, setMessages] = useState<
@@ -60,6 +69,7 @@ export default function ParentDashboard() {
   const [invendus, setInvendus] = useState<Invendu[]>([]);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
+  const [audioSrc, setAudioSrc] = useState<string | null>(null);
 
   // Add enfant form
   const [nom, setNom] = useState("");
@@ -164,6 +174,7 @@ export default function ParentDashboard() {
   );
 
   useEffect(() => {
+    if (!mounted) return;
     if (!user) {
       router.push("/");
       return;
@@ -324,57 +335,51 @@ export default function ParentDashboard() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const tabs = [
-    { id: "enfants", label: "👦 Mes Enfants", icon: "👦" },
-    { id: "reservation", label: "📅 Réservation", icon: "📅" },
-    { id: "bourse", label: "🔄 Bourse d'Échange", icon: "🔄" },
-    { id: "menus", label: "🍽️ Menus", icon: "🍽️" },
-    { id: "coach", label: "🦸 IA Coach & Tamagotchi", icon: "🦸" },
-    { id: "invendus", label: "🛍️ Box Anti-Gaspi", icon: "🛍️" },
-    { id: "bilan", label: "🌍 Mon Bilan Planétaire", icon: "🌍" },
+    { id: "enfants", label: "Mes Enfants", icon: "👦" },
+    { id: "reservation", label: "Réservation", icon: "📅" },
+    { id: "bourse", label: "Bourse d'Échange", icon: "🔄" },
+    { id: "menus", label: "Menus", icon: "🍽️" },
+    { id: "coach", label: "IA Coach & Tamagotchi", icon: "🦸" },
+    { id: "invendus", label: "Box Anti-Gaspi", icon: "🛍️" },
+    { id: "bilan", label: "Mon Bilan Planétaire", icon: "🌍" },
   ];
 
   const characters = [
     {
       name: "Spider-Man",
       emoji: "🕷️",
-      image:
-        "https://vignette.wikia.nocookie.net/marveldatabase/images/1/11/Peter_Parker_%28Earth-616%29_from_Marvel_Universe_0001.png",
-      voiceId: "ErXwteBhS96p0F6N0q6m",
+      image: "/heroes/spider-man.jpg",
+      voiceId: "fr-FR-RemyMultilingualNeural",
     },
     {
       name: "Elsa",
       emoji: "❄️",
-      image:
-        "https://vignette.wikia.nocookie.net/disney/images/e/e5/Elsa_Frozen_2.png",
-      voiceId: "EXAVITQu4vr4xnSDxMaL",
+      image: "/heroes/elsa.jpg",
+      voiceId: "fr-FR-DeniseNeural",
     },
     {
       name: "Chase",
       emoji: "🐕",
-      image:
-        "https://vignette.wikia.nocookie.net/paw-patrol/images/7/7b/Chase_main_image.png",
-      voiceId: "ErXwteBhS96p0F6N0q6m",
+      image: "/heroes/chase.jpg",
+      voiceId: "fr-BE-GerardNeural",
     },
     {
       name: "Marcus",
       emoji: "🚒",
-      image:
-        "https://vignette.wikia.nocookie.net/paw-patrol/images/0/06/Marshall_Main_Image.png",
-      voiceId: "pNInz6obpgnuMvscL7nm",
+      image: "/heroes/marcus.jpg",
+      voiceId: "fr-CA-AntoineNeural",
     },
     {
       name: "Batman",
       emoji: "🦇",
-      image:
-        "https://vignette.wikia.nocookie.net/batman/images/d/d3/Batman_Portrait.png",
-      voiceId: "pNInz6obpgnuMvscL7nm",
+      image: "/heroes/batman.jpg",
+      voiceId: "fr-FR-HenriNeural",
     },
     {
       name: "Mirabel",
       emoji: "🦋",
-      image:
-        "https://vignette.wikia.nocookie.net/disney/images/c/c5/Mirabel_Madrigal.png",
-      voiceId: "EXAVITQu4vr4xnSDxMaL",
+      image: "/heroes/Mirabel.jpg",
+      voiceId: "fr-FR-EloiseNeural",
     },
   ];
 
@@ -394,6 +399,8 @@ export default function ParentDashboard() {
     return "linear-gradient(135deg, #1E5C30 0%, #328A4A 100%)";
   };
 
+  if (!mounted) return null;
+
   if (!user)
     return (
       <div
@@ -409,9 +416,7 @@ export default function ParentDashboard() {
       className="min-h-screen transition-all duration-700 relative"
       style={{ background: getSchoolTheme() }}
     >
-      <div className="absolute top-4 right-4 z-50">
-        <LanguageSelector />
-      </div>
+
 
       <nav
         className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-8 py-4 gap-4"
@@ -429,6 +434,7 @@ export default function ParentDashboard() {
           <span className="text-white/80 text-xs sm:text-sm font-medium bg-white/10 px-3 py-1 rounded-full">
             👨‍👩‍👧 {user.name}
           </span>
+          <LanguageSelector />
           <button
             onClick={logout}
             className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-lg transition-all active:scale-95"
@@ -722,7 +728,7 @@ export default function ParentDashboard() {
                   onChange={(e) => {
                     setEnfantId(e.target.value);
                     const enf = enfants.find((en) => en.id === e.target.value);
-                    if (enf) setResEcoleId("");
+                    if (enf && enf.ecole_id) setResEcoleId(enf.ecole_id); else setResEcoleId("");
                   }}
                   required
                   className="w-full px-4 py-2.5 rounded-xl font-medium"
@@ -756,11 +762,17 @@ export default function ParentDashboard() {
                   }}
                 >
                   <option value="">— Choisir une école —</option>
-                  {ecoles.map((ec) => (
-                    <option key={ec.id} value={ec.id}>
-                      {ec.nom}
-                    </option>
-                  ))}
+                  {ecoles
+                    .filter((ec) => {
+                      if (!enfantId) return true; // Affiche tout si aucun enfant n'est sélectionné
+                      const enf = enfants.find((e) => e.id === enfantId);
+                      return enf ? ec.id === enf.ecole_id : true;
+                    })
+                    .map((ec) => (
+                      <option key={ec.id} value={ec.id}>
+                        {ec.nom}
+                      </option>
+                    ))}
                 </select>
               </div>
               <FormInput
@@ -1066,19 +1078,23 @@ export default function ParentDashboard() {
         {tab === "coach" && (
           <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
             <div className="rounded-2xl p-8 text-center bg-white/10 border border-white/20 overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-                <img
-                  src={selectedChar.image}
-                  alt="bg"
-                  className="w-full h-full object-cover scale-150 blur-xl"
-                />
-              </div>
               <div className="relative z-10">
-                <div className="w-32 h-32 mx-auto mb-4 rounded-full border-4 border-[#F47B20] overflow-hidden shadow-2xl">
+                <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                  <img
+                    src={selectedChar.image}
+                    alt="bg"
+                    className="w-full h-full object-cover scale-150 blur-xl"
+                  />
+                </div>
+                <div className="w-32 h-32 mx-auto mb-4 rounded-full border-4 border-[#F47B20] overflow-hidden shadow-2xl bg-white/20">
                   <img
                     src={selectedChar.image}
                     alt={selectedChar.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                      (e.target as HTMLImageElement).parentElement!.innerHTML = `<span style="font-size: 4rem;">${selectedChar.emoji}</span>`;
+                    }}
                   />
                 </div>
                 <h2 className="text-3xl font-bold text-white mb-2">
@@ -1102,11 +1118,15 @@ export default function ParentDashboard() {
                       : "bg-white/5 border-white/10 hover:bg-white/20"
                   }`}
                 >
-                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20">
+                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20 bg-white/10 flex items-center justify-center text-3xl">
                     <img
                       src={char.image}
                       alt={char.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                        (e.target as HTMLImageElement).parentElement!.innerHTML = char.emoji;
+                      }}
                     />
                   </div>
                   <span className="text-[10px] font-bold text-white uppercase text-center">
@@ -1242,6 +1262,13 @@ export default function ParentDashboard() {
 
               <button
                 onClick={async () => {
+                  // --- ASTUCE ANTI-BLOCAGE SAFARI/CHROME ---
+                  // Créer le lecteur audio IMMÉDIATEMENT lors du clic utilisateur
+                  const bgAudio = new Audio();
+                  // Jouer un son muet minuscule pour "débloquer" ce lecteur dans ce contexte
+                  bgAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+                  bgAudio.play().catch(() => {});
+
                   const file = (window as unknown as { selectedFile: File })
                     .selectedFile;
                   if (!file)
@@ -1281,10 +1308,15 @@ export default function ParentDashboard() {
                     setMsg(data.message);
 
                     if (data.audio) {
-                      const audio = new Audio(
-                        `data:audio/mp3;base64,${data.audio}`
-                      );
-                      audio.play();
+                      const audioUrl = `data:audio/mp3;base64,${data.audio}`;
+                      setAudioSrc(audioUrl);
+                      // On réutilise le lecteur DÉJÀ débloqué pour lire la vraie voix !
+                      bgAudio.src = audioUrl;
+                      bgAudio.play().catch((e) => {
+                        console.warn("Autoplay bloqué par le navigateur : ", e);
+                      });
+                    } else {
+                      setAudioSrc(null);
                     }
                   } catch {
                     setMsg(
@@ -1313,6 +1345,20 @@ export default function ParentDashboard() {
                   <div className="whitespace-pre-wrap leading-relaxed text-2xl italic font-medium">
                     {msg}
                   </div>
+                  
+                  {audioSrc && (
+                    <button
+                      onClick={() => {
+                        const audio = new Audio(audioSrc);
+                        audio.play().catch((e) => console.error(e));
+                      }}
+                      className="mt-6 w-full py-4 bg-[#F47B20] text-white font-bold text-xl rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center gap-3"
+                    >
+                      <span className="text-3xl">🔊</span>
+                      <span>Écouter le message de {selectedChar.name}</span>
+                    </button>
+                  )}
+
                   <div className="mt-6 text-right font-black text-[#F47B20] flex items-center justify-end gap-2 text-sm uppercase">
                     <span>Disponible dans l&apos;application Cantine+</span>
                     <span className="text-2xl">✨</span>
@@ -1459,7 +1505,7 @@ export default function ParentDashboard() {
               (acc, e) => acc + (e.points || 0),
               0
             );
-            const repasSauves = Math.floor(totalPoints / 20) + 2; // Mock calculation for demo based on engagement
+            const repasSauves = Math.floor(totalPoints / 20); // Vrai calcul sans triche
             const co2Evite = (repasSauves * 2.5).toFixed(1);
             const eauPreservee = repasSauves * 500;
 

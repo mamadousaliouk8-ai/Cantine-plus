@@ -11,6 +11,13 @@ from ai_waste import analyze_menu_optimization
 
 router = APIRouter()
 
+from supabase import create_client
+import os
+_url = os.environ.get("SUPABASE_URL")
+_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+admin_client = create_client(_url, _key)
+
+
 class MenuConseilRequest(BaseModel):
     entree: str
     plat: str
@@ -31,7 +38,7 @@ class ProfileData(BaseModel):
 @router.get("/profile/{user_id}")
 def get_profile(user_id: str):
     try:
-        res = supabase.table("prestataires").select("*").eq("user_id", user_id).execute()
+        res = admin_client.table("prestataires").select("*").eq("user_id", user_id).execute()
         return res.data[0] if res.data else None
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -39,7 +46,7 @@ def get_profile(user_id: str):
 @router.post("/profile")
 def create_profile(data: ProfileData):
     try:
-        supabase.table("prestataires").insert(data.dict()).execute()
+        admin_client.table("prestataires").insert(data.dict()).execute()
         return {"message": "Profil créé !"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -47,7 +54,7 @@ def create_profile(data: ProfileData):
 @router.get("/menus/{prestataire_id}")
 def get_menus(prestataire_id: str):
     try:
-        res = supabase.table("menus").select("*").eq("prestataire_id", prestataire_id).order("date").execute()
+        res = admin_client.table("menus").select("*").eq("prestataire_id", prestataire_id).order("date").execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -76,7 +83,7 @@ async def import_menus(prestataire_id: str, file: UploadFile = File(...)):
                     "bio": str(row.get("Bio (Oui/Non)", "Non")).strip().lower() in ["oui", "yes", "true", "1"],
                 }
                 if data["plat"]:
-                    supabase.table("menus").insert(data).execute()
+                    admin_client.table("menus").insert(data).execute()
                     succes += 1
             except:
                 erreurs += 1
@@ -88,11 +95,11 @@ async def import_menus(prestataire_id: str, file: UploadFile = File(...)):
 @router.get("/commandes/{prestataire_id}")
 def get_commandes(prestataire_id: str):
     try:
-        ecoles = supabase.table("ecoles").select("id, nom").eq("prestataire_id", prestataire_id).execute()
+        ecoles = admin_client.table("ecoles").select("id, nom").eq("prestataire_id", prestataire_id).execute()
         ecole_ids = [e["id"] for e in ecoles.data]
         if not ecole_ids:
             return []
-        res = supabase.table("reservations").select("*, ecoles(nom), enfants(nom, prenom, allergies)").in_("ecole_id", ecole_ids).execute()
+        res = admin_client.table("reservations").select("*, ecoles(nom), enfants(nom, prenom, allergies)").in_("ecole_id", ecole_ids).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

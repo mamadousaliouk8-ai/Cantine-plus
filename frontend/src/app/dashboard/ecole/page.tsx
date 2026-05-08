@@ -32,11 +32,21 @@ type Menu = {
 
 export default function EcoleDashboard() {
   const router = useRouter();
-  const [user] = useState<User | null>(() => {
-    if (typeof window === "undefined") return null;
+  const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
     const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
-  });
+    if (stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch (e) {
+        console.error("Failed to parse user", e);
+      }
+    }
+  }, []);
+
   const [tab, setTab] = useState("reservations");
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [menus, setMenus] = useState<Menu[]>([]);
@@ -44,6 +54,7 @@ export default function EcoleDashboard() {
     id: string;
     nom: string;
   } | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [msg, setMsg] = useState("");
   const [setupNom, setSetupNom] = useState("");
   const [loadingSetup, setLoadingSetup] = useState(false);
@@ -100,6 +111,7 @@ export default function EcoleDashboard() {
   }, [headers]);
 
   useEffect(() => {
+    if (!mounted) return;
     if (!user) {
       router.push("/");
       return;
@@ -119,8 +131,9 @@ export default function EcoleDashboard() {
           fetchPrestataires();
         }
       })
-      .catch((err) => console.error("Erreur profil:", err));
-  }, [router, fetchData, fetchPrestataires, headers, user]);
+      .catch((err) => console.error("Erreur profil:", err))
+      .finally(() => setLoadingProfile(false));
+  }, [router, fetchData, fetchPrestataires, headers, user, mounted]);
 
   const handleSetup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,12 +154,19 @@ export default function EcoleDashboard() {
         throw new Error(
           `${data.detail || "Erreur lors de la création"} (API: ${API})`
         );
-      setMsg("✅ Profil créé avec succès ! Redirection...");
-      setTimeout(() => window.location.reload(), 1500);
+      setMsg(""); // On vide le message pour qu'il n'apparaisse pas sur le tableau de bord
+      if (data.data && data.data.length > 0) {
+        setEcoleProfile(data.data[0]);
+        fetchData(data.data[0].id);
+      } else {
+        // Fallback
+        setEcoleProfile({ id: "nouveau-profil", nom: setupNom });
+      }
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : "Problème de connexion";
       setMsg(`❌ Erreur: ${errorMsg}`);
+    } finally {
       setLoadingSetup(false);
     }
   };
@@ -189,13 +209,13 @@ export default function EcoleDashboard() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const tabs = [
-    { id: "reservations", label: "📅 Réservations", icon: "📋" },
-    { id: "menus", label: "🍽️ Menus du jour", icon: "🥘" },
-    { id: "liaison", label: "📢 Cahier de Liaison", icon: "💬" },
-    { id: "invendus", label: "♻️ Gestion Invendus", icon: "🍎" },
-    { id: "gaspillage", label: "🗑️ Suivi Déchets", icon: "📉" },
-    { id: "reports", label: "📄 Rapports & PDF", icon: "📥" },
-    { id: "admin", label: "🛡️ Gestion Admin", icon: "🔐" },
+    { id: "reservations", label: "Réservations", icon: "📋" },
+    { id: "menus", label: "Menus du jour", icon: "🥘" },
+    { id: "liaison", label: "Cahier de Liaison", icon: "💬" },
+    { id: "invendus", label: "Gestion Invendus", icon: "🍎" },
+    { id: "gaspillage", label: "Suivi Déchets", icon: "📉" },
+    { id: "reports", label: "Rapports & PDF", icon: "📥" },
+    { id: "admin", label: "Gestion Admin", icon: "🔐" },
   ];
 
   const generateReport = (period: string) => {
@@ -207,7 +227,9 @@ export default function EcoleDashboard() {
     }, 2000);
   };
 
-  if (!user)
+  if (!mounted) return null;
+
+  if (!user || loadingProfile)
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -331,9 +353,7 @@ export default function EcoleDashboard() {
       className="min-h-screen transition-all duration-700 relative"
       style={{ background: getSchoolTheme() }}
     >
-      <div className="absolute top-4 right-4 z-50">
-        <LanguageSelector />
-      </div>
+
 
       {/* Navbar - Improved for Mobile */}
       <nav
@@ -352,6 +372,7 @@ export default function EcoleDashboard() {
           <span className="text-white/80 text-xs sm:text-sm font-medium bg-white/10 px-3 py-1 rounded-full text-center">
             🏫 {ecoleProfile.nom}
           </span>
+          <LanguageSelector />
           <button
             onClick={logout}
             className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-lg transition-all active:scale-95"

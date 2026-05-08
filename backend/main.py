@@ -2,8 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from routes import auth, parent, ecole, prestataire, admin
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
+
+from routes import auth, parent, ecole, prestataire, admin
 
 app = FastAPI(title="Cantine+ API", version="1.0.0")
 
@@ -61,4 +65,9 @@ app.include_router(admin.router, prefix="/admin", tags=["Admin"])
 
 @app.get("/")
 def root():
+    print(">>> REQUEST TO BACKEND ROOT RECEIVED <<<")
     return {"message": "Cantine+ API is running 🚀"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

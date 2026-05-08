@@ -28,7 +28,9 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    console.log(">>> Tentative de connexion pour:", loginEmail);
     try {
+      console.log(">>> Appel API:", `${API}/auth/signin`);
       const res = await fetch(`${API}/auth/signin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

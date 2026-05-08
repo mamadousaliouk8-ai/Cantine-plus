@@ -1,14 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-
-import Script from "next/script";
-
-declare global {
-  interface Window {
-    google: unknown;
-    googleTranslateElementInit: () => void;
-  }
-}
+import GoogleTranslate from "@/components/GoogleTranslate";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 export const metadata: Metadata = {
   title: "Cantine+ | La plateforme intelligente de gestion des cantines",
@@ -41,41 +34,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body>
-        {/* Barre de traduction universelle */}
-        <div
-          id="google_translate_element"
-          className="fixed top-0 left-0 z-50 p-2 opacity-80 hover:opacity-100 transition-opacity"
-        ></div>
+        <ServiceWorkerRegister />
+        <GoogleTranslate />
         {children}
-        <Script
-          strategy="beforeInteractive"
-          src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-        />
-        <Script id="google-translate-init" strategy="afterInteractive">
-          {`
-            function googleTranslateElementInit() {
-              if (window.google && window.google.translate) {
-                new window.google.translate.TranslateElement({
-                  pageLanguage: 'fr',
-                  layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
-                }, 'google_translate_element');
-              }
-            }
-          `}
-        </Script>
-        <Script id="register-sw" strategy="afterInteractive">
-          {`
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }, function(err) {
-                  console.log('ServiceWorker registration failed: ', err);
-                });
-              });
-            }
-          `}
-        </Script>
       </body>
     </html>
   );
