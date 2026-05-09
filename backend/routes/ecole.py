@@ -134,7 +134,13 @@ def add_gaspillage(data: GaspillageData):
 @router.get("/prestataires")
 def get_prestataires():
     try:
-        res = supabase.table("prestataires").select("id, nom").execute()
+        from supabase import create_client
+        import os
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        admin_client = create_client(url, key)
+        
+        res = admin_client.table("prestataires").select("id, nom").execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
