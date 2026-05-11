@@ -60,6 +60,7 @@ export default function ParentDashboard() {
     }
   }, []);
   const [tab, setTab] = useState("enfants");
+  const [filterRegime, setFilterRegime] = useState("Standard");
   const [enfants, setEnfants] = useState<Enfant[]>([]);
   const [messages, setMessages] = useState<
     { id: string; titre: string; contenu: string; created_at: string }[]
@@ -950,16 +951,46 @@ export default function ParentDashboard() {
         {/* ONGLET MENUS */}
         {tab === "menus" && (
           <div>
-            <h2 className="text-xl font-bold text-white mb-4">
-              🍽️ Menus disponibles
-            </h2>
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white mb-4 md:mb-0">
+                🍽️ Menus disponibles
+              </h2>
+              
+              {/* Filtre de Régime */}
+              <div className="flex bg-black/20 p-1 rounded-xl w-full md:w-auto">
+                <button
+                  onClick={() => setFilterRegime("Standard")}
+                  className={`flex-1 md:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${
+                    filterRegime === "Standard"
+                      ? "bg-[#F47B20] text-white shadow-lg"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  🥩 Standard
+                </button>
+                <button
+                  onClick={() => setFilterRegime("Végétarien")}
+                  className={`flex-1 md:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${
+                    filterRegime === "Végétarien"
+                      ? "bg-green-500 text-white shadow-lg"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  🌱 Végétarien
+                </button>
+              </div>
+            </div>
+
             {menus.length === 0 ? (
               <p className="text-white/60">
                 Aucun menu disponible pour le moment.
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {menus.map((menu) => {
+                {menus.filter((menu) => {
+                  const isVeggie = menu.type.toLowerCase().includes("végétarien") || menu.type.toLowerCase().includes("sans viande");
+                  return filterRegime === "Végétarien" ? isVeggie : !isVeggie;
+                }).map((menu) => {
                   const getSuperPouvoir = (plat: string) => {
                     const text = plat.toLowerCase();
                     if (text.includes("carotte"))

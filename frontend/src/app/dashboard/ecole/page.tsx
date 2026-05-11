@@ -643,67 +643,80 @@ export default function EcoleDashboard() {
 
         {tab === "menus" && (
           <div>
-            <h2 className="text-xl font-bold text-white mb-4">
+            <h2 className="text-xl font-bold text-white mb-6">
               🍽️ Menus de la semaine
             </h2>
             {menus.length === 0 ? (
               <p className="text-white/60">Aucun menu disponible.</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {menus.map((menu) => (
-                  <div
-                    key={menu.id}
-                    className="rounded-2xl p-5"
-                    style={{
-                      background: "rgba(255,255,255,0.12)",
-                      border: "1px solid rgba(255,255,255,0.2)",
-                    }}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="font-bold text-white text-sm">
-                        {new Date(menu.date).toLocaleDateString("fr-FR", {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                        })}
-                      </span>
-                      <span
-                        className="px-2 py-1 rounded-lg text-xs font-semibold"
-                        style={{ background: "#F47B20", color: "white" }}
-                      >
-                        {menu.type}
-                      </span>
+              <div className="space-y-8">
+                {Object.entries(
+                  menus.reduce((acc, menu) => {
+                    if (!acc[menu.date]) acc[menu.date] = [];
+                    acc[menu.date].push(menu);
+                    return acc;
+                  }, {} as Record<string, typeof menus>)
+                ).map(([date, dayMenus]) => (
+                  <div key={date} className="bg-black/10 p-6 rounded-3xl border border-white/10">
+                    <h3 className="text-xl font-bold text-white mb-4 border-b border-white/20 pb-2">
+                      {new Date(date).toLocaleDateString("fr-FR", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                      })}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {dayMenus.map((menu) => (
+                        <div
+                          key={menu.id}
+                          className="rounded-2xl p-5"
+                          style={{
+                            background: menu.type.toLowerCase().includes("végétarien") || menu.type.toLowerCase().includes("sans viande") ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.12)",
+                            border: "1px solid rgba(255,255,255,0.2)",
+                          }}
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <span
+                              className="px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider"
+                              style={{ background: menu.type.toLowerCase().includes("végétarien") || menu.type.toLowerCase().includes("sans viande") ? "#22c55e" : "#F47B20", color: "white" }}
+                            >
+                              {menu.type}
+                            </span>
+                          </div>
+                          {menu.entree && (
+                            <p className="text-white/70 text-sm mb-1">
+                              <span className="font-semibold text-white/90">
+                                Entrée :
+                              </span>{" "}
+                              {menu.entree}
+                            </p>
+                          )}
+                          <p className="text-white text-sm mb-1">
+                            <span className="font-semibold">Plat :</span> {menu.plat}
+                          </p>
+                          {menu.dessert && (
+                            <p className="text-white/70 text-sm">
+                              <span className="font-semibold text-white/90">
+                                Dessert :
+                              </span>{" "}
+                              {menu.dessert}
+                            </p>
+                          )}
+                          {menu.bio && (
+                            <span
+                              className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs"
+                              style={{
+                                background: "rgba(34,197,94,0.3)",
+                                color: "#86efac",
+                                border: "1px solid rgba(34,197,94,0.5)",
+                              }}
+                            >
+                              🌱 Bio
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                    {menu.entree && (
-                      <p className="text-white/70 text-sm mb-1">
-                        <span className="font-semibold text-white/90">
-                          Entrée :
-                        </span>{" "}
-                        {menu.entree}
-                      </p>
-                    )}
-                    <p className="text-white text-sm mb-1">
-                      <span className="font-semibold">Plat :</span> {menu.plat}
-                    </p>
-                    {menu.dessert && (
-                      <p className="text-white/70 text-sm">
-                        <span className="font-semibold text-white/90">
-                          Dessert :
-                        </span>{" "}
-                        {menu.dessert}
-                      </p>
-                    )}
-                    {menu.bio && (
-                      <span
-                        className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs"
-                        style={{
-                          background: "rgba(34,197,94,0.3)",
-                          color: "#86efac",
-                        }}
-                      >
-                        🌿 Bio
-                      </span>
-                    )}
                   </div>
                 ))}
               </div>
