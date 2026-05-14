@@ -42,7 +42,7 @@ def get_profile(user_id: str):
 @router.post("/profile")
 def create_profile(data: ProfileData):
     try:
-        admin_client.table("prestataires").insert(data.dict()).execute()
+        admin_client.table("prestataires").insert(data.model_dump()).execute()
         return {"message": "Profil créé !"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

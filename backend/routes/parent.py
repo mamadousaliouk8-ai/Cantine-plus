@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
-from db import supabase
-from typing import Optional
-from utils.ai_coach import analyze_meal_image, generate_superhero_voice, analyze_meal_debrief, generate_culinary_quiz
+from db import supabase  # type: ignore[import]
+from typing import Optional, Any, Dict, cast
+from utils.ai_coach import analyze_meal_image, generate_superhero_voice, analyze_meal_debrief, generate_culinary_quiz  # type: ignore[import]
 
 router = APIRouter()
 
@@ -76,8 +76,8 @@ async def debrief_meal(data: DebriefData):
 
 from supabase import create_client
 import os
-_url = os.environ.get("SUPABASE_URL")
-_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+_url = os.environ.get("SUPABASE_URL") or ""
+_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or ""
 admin_client = create_client(_url, _key)
 
 
@@ -143,7 +143,7 @@ def get_enfants(parent_id: str):
 @router.post("/enfants")
 def add_enfant(data: EnfantData):
     try:
-        admin_client.table("enfants").insert(data.dict()).execute()
+        admin_client.table("enfants").insert(data.model_dump()).execute()
         return {"message": "Enfant ajouté avec succès !"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -164,7 +164,8 @@ def add_points(enfant_id: str, data: PointsData):
         if not res.data:
             raise HTTPException(status_code=404, detail="Enfant introuvable")
         
-        current_points = res.data[0].get("points") or 0
+        row: Dict[str, Any] = cast(Dict[str, Any], res.data[0])
+        current_points = row.get("points") or 0
         new_points = current_points + data.points
         
         # Update points
@@ -185,7 +186,7 @@ def get_menus():
 def get_parent_reservations(parent_id: str):
     try:
         enfants_res = admin_client.table("enfants").select("id").eq("parent_id", parent_id).execute()
-        enfant_ids = [e["id"] for e in enfants_res.data]
+        enfant_ids = [cast(Dict[str, Any], e)["id"] for e in enfants_res.data]
         if not enfant_ids:
             return []
         res = admin_client.table("reservations").select("*").in_("enfant_id", enfant_ids).execute()
@@ -196,7 +197,7 @@ def get_parent_reservations(parent_id: str):
 @router.post("/reservations")
 def add_reservation(data: ReservationData):
     try:
-        admin_client.table("reservations").insert({**data.dict(), "status": "Confirmée"}).execute()
+        admin_client.table("reservations").insert({**data.model_dump(), "status": "Confirmée"}).execute()
         return {"message": "Réservation confirmée !"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -214,11 +215,12 @@ def reserve_invendu(invendu_id: int, data: ReservationInvenduData):
     try:
         # Check quantity
         res = admin_client.table("invendus").select("quantite").eq("id", invendu_id).execute()
-        if not res.data or res.data[0]["quantite"] <= 0:
+        row0: Dict[str, Any] = cast(Dict[str, Any], res.data[0])
+        if not res.data or int(row0["quantite"]) <= 0:
             raise HTTPException(status_code=400, detail="Ce panier n'est plus disponible")
         
         # Decrement quantity
-        new_quantite = res.data[0]["quantite"] - 1
+        new_quantite = int(row0["quantite"]) - 1
         admin_client.table("invendus").update({"quantite": new_quantite}).eq("id", invendu_id).execute()
         
         # Save reservation
