@@ -115,7 +115,7 @@ export default function AdminDashboard() {
             height={35}
             className="sm:w-[40px] sm:h-[40px]"
           />
-          <span className="font-bold text-lg sm:text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
+          <span className="font-bold text-lg sm:text-xl tracking-wider text-transparent bg-clip-text bg-linear-to-r from-green-400 to-blue-500">
             CANTINE+ SUPERVISION
           </span>
         </div>
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
 
         {/* TOP KPIs - IMPACT ENVIRONNEMENTAL */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="rounded-3xl p-8 bg-gradient-to-br from-green-500/20 to-blue-500/20 border border-green-500/30 relative overflow-hidden group">
+          <div className="rounded-3xl p-8 bg-linear-to-br from-green-500/20 to-blue-500/20 border border-green-500/30 relative overflow-hidden group">
             <div className="absolute -right-10 -bottom-10 text-9xl opacity-10 group-hover:scale-110 transition-transform duration-500">
               🌍
             </div>
@@ -168,7 +168,7 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          <div className="rounded-3xl p-8 bg-gradient-to-br from-[#F47B20]/20 to-red-500/20 border border-[#F47B20]/30 relative overflow-hidden group">
+          <div className="rounded-3xl p-8 bg-linear-to-br from-[#F47B20]/20 to-red-500/20 border border-[#F47B20]/30 relative overflow-hidden group">
             <div className="absolute -right-10 -bottom-10 text-9xl opacity-10 group-hover:scale-110 transition-transform duration-500">
               🗑️
             </div>

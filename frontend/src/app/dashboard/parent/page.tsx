@@ -71,6 +71,7 @@ export default function ParentDashboard() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [audioSrc, setAudioSrc] = useState<string | null>(null);
+  const bgAudio = useMemo(() => (typeof window !== "undefined" ? new Audio() : null), []);
 
   // Add enfant form
   const [nom, setNom] = useState("");
@@ -98,6 +99,16 @@ export default function ParentDashboard() {
   const [resDate, setResDate] = useState("");
   const [resType, setResType] = useState("Viande");
   const [resEcoleId, setResEcoleId] = useState("");
+
+  // Quiz states
+  const [quizActive, setQuizActive] = useState(false);
+  const [quizSubStep, setQuizSubStep] = useState(0); 
+  const [quizDate, setQuizDate] = useState("");
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [quizStep, setQuizStep] = useState(0);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizPresentation, setQuizPresentation] = useState("");
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : "";
@@ -436,6 +447,19 @@ export default function ParentDashboard() {
             👨‍👩‍👧 {user.name}
           </span>
           <LanguageSelector />
+          {/* Bouton enveloppe messages */}
+          <button
+            onClick={() => { setTab("enfants"); }}
+            className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 transition-all"
+            title="Messages de l'école"
+          >
+            <span className="text-xl">✉️</span>
+            {messages.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1 shadow-lg">
+                {messages.length}
+              </span>
+            )}
+          </button>
           <button
             onClick={logout}
             className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-lg transition-all active:scale-95"
@@ -1023,7 +1047,10 @@ export default function ParentDashboard() {
                         pouvoir: "Énergie Infinie 🚀",
                         desc: "Plein de Vitamines",
                       };
-                    return null;
+                    return {
+                      pouvoir: "Énergie du Héros ⚡",
+                      desc: "Repas équilibré",
+                    };
                   };
                   const superPouvoir = getSuperPouvoir(
                     `${menu.entree} ${menu.plat} ${menu.dessert}`
@@ -1088,7 +1115,7 @@ export default function ParentDashboard() {
                       </div>
 
                       {superPouvoir && (
-                        <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-yellow-400/20 to-orange-500/20 border border-yellow-400/30">
+                        <div className="mt-4 p-3 rounded-xl bg-linear-to-r from-yellow-400/20 to-orange-500/20 border border-yellow-400/30">
                           <div className="text-yellow-300 font-bold text-sm flex items-center gap-1">
                             ✨ {superPouvoir.pouvoir}
                           </div>
@@ -1219,7 +1246,7 @@ export default function ParentDashboard() {
                 const progress = Math.min(100, (pts / maxPts) * 100);
 
                 return (
-                  <div className="max-w-md mx-auto p-6 rounded-3xl text-center bg-gradient-to-b from-blue-400/20 to-green-500/20 border border-white/20 shadow-2xl relative overflow-hidden">
+                  <div className="max-w-md mx-auto p-6 rounded-3xl text-center bg-linear-to-b from-blue-400/20 to-green-500/20 border border-white/20 shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
                     <h3 className="text-xl font-bold text-white mb-2">
                       L&apos;Arbre Virtuel de {selectedEnfant?.prenom}
@@ -1237,7 +1264,7 @@ export default function ParentDashboard() {
                     </p>
                     <div className="w-full bg-black/40 rounded-full h-4 mb-2 overflow-hidden border border-white/10">
                       <div
-                        className="bg-gradient-to-r from-green-400 to-green-300 h-4 rounded-full transition-all duration-1000"
+                        className="bg-linear-to-r from-green-400 to-green-300 h-4 rounded-full transition-all duration-1000"
                         style={{ width: `${progress}%` }}
                       ></div>
                     </div>
@@ -1249,181 +1276,282 @@ export default function ParentDashboard() {
                 );
               })()}
 
-            <div className="rounded-3xl p-8 space-y-6 bg-white/5 border border-white/10 backdrop-blur-xl">
-              <div className="flex flex-col items-center gap-6">
-                <label className="w-full flex flex-col items-center px-4 py-12 bg-white/10 text-white rounded-3xl border-2 border-dashed border-white/30 cursor-pointer hover:bg-white/20 transition-all group">
-                  <div className="w-20 h-20 bg-[#F47B20] rounded-full flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                    📸
+            <div className="rounded-3xl p-8 space-y-6 bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden min-h-[400px] flex flex-col justify-center">
+              {!quizActive ? (
+                /* --- ÉTAPE 1 : SÉLECTION DE LA MISSION --- */
+                <div className="space-y-6 animate-fade-in">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-16 h-16 bg-linear-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg animate-pulse">
+                      🎯
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-white">Mission Nutrition</h3>
+                      <p className="text-white/60 text-sm">Prépare tes super-pouvoirs pour demain !</p>
+                    </div>
                   </div>
-                  <span className="text-xl font-bold">
-                    Photo du plateau repas
-                  </span>
-                  <p className="text-white/60 text-sm mt-2">
-                    Cliquez pour capturer le repas du champion
-                  </p>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          const img = document.getElementById(
-                            "preview-img"
-                          ) as HTMLImageElement;
-                          if (img) img.src = ev.target?.result as string;
-                          img.classList.remove("hidden");
-                        };
-                        reader.readAsDataURL(file);
-                        (
-                          window as unknown as { selectedFile?: File }
-                        ).selectedFile = file;
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
+                      <label className="block text-white/70 text-xs font-bold uppercase tracking-widest mb-2 ml-1">Date du repas à découvrir</label>
+                      <input
+                        type="date"
+                        value={quizDate}
+                        onChange={(e) => setQuizDate(e.target.value)}
+                        className="w-full px-5 py-4 rounded-2xl bg-white text-black text-xl font-black focus:ring-4 focus:ring-[#F47B20]/30 outline-none transition-all shadow-inner"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={async () => {
+                      if (!quizDate || !selectedCoachEnfantId) {
+                        return alert("Choisis une date et un enfant !");
+                      }
+                      setLoading(true);
+                      // DÉBLOCAGE CRITIQUE : Amorçage du lecteur dans le thread du clic
+                      if (bgAudio) {
+                        bgAudio.play().then(() => bgAudio.pause()).catch(() => {});
+                      }
+                      try {
+                        const targetEnfant = enfants.find(e => e.id === selectedCoachEnfantId);
+                        const menuRes = await fetch(`${API}/parent/menus`);
+                        const menus = await menuRes.json();
+                        const dayMenu = menus.filter((m: any) => m.date === quizDate);
+                        
+                        if (dayMenu.length === 0) {
+                          alert("Pas de menu disponible pour cette date.");
+                          setLoading(false);
+                          return;
+                        }
+
+                        const menuStr = dayMenu.map((m: any) => `${m.type}: ${m.plat}`).join(", ");
+                        
+                        const quizRes = await fetch(`${API}/parent/quiz`, {
+                          method: "POST",
+                          headers: { ...headers, "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            menu_description: menuStr,
+                            character_name: selectedChar.name,
+                            child_name: targetEnfant?.prenom,
+                            age: targetEnfant?.age,
+                            voice_id: selectedChar.voiceId
+                          })
+                        });
+                        const data = await quizRes.json();
+                        setQuizQuestions(data.quiz);
+                        setQuizPresentation(data.presentation);
+                        setQuizActive(true);
+                        setQuizSubStep(0); 
+                        setQuizStep(0);
+                        setQuizScore(0);
+                        
+                        if (data.audio && bgAudio) {
+                          const audioUrl = `data:audio/mp3;base64,${data.audio}`;
+                          setAudioSrc(audioUrl);
+                          bgAudio.src = audioUrl;
+                          bgAudio.play().catch(e => console.warn("Audio bloqué:", e));
+                        }
+                      } catch (err) {
+                        console.error(err);
+                        alert("Erreur lors de la mission.");
+                      } finally {
+                        setLoading(false);
                       }
                     }}
-                  />
-                </label>
-                <img
-                  id="preview-img"
-                  className="hidden max-h-72 rounded-2xl shadow-2xl border-4 border-white/30 object-cover"
-                  alt="Preview"
-                />
-              </div>
-
-              <button
-                onClick={async () => {
-                  // --- ASTUCE ANTI-BLOCAGE SAFARI/CHROME ---
-                  // Créer le lecteur audio IMMÉDIATEMENT lors du clic utilisateur
-                  const bgAudio = new Audio();
-                  // Jouer un son muet minuscule pour "débloquer" ce lecteur dans ce contexte
-                  bgAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-                  bgAudio.play().catch(() => {});
-
-                  const file = (window as unknown as { selectedFile: File })
-                    .selectedFile;
-                  if (!file)
-                    return alert("Veuillez d'abord choisir une photo !");
-                  if (!selectedCoachEnfantId)
-                    return alert(
-                      "Veuillez d'abord sélectionner un enfant pour adapter le message !"
-                    );
-
-                  const selectedEnfant = enfants.find(
-                    (e) => e.id === selectedCoachEnfantId
-                  );
-
-                  setLoading(true);
-                  setMsg("");
-                  const formData = new FormData();
-                  formData.append("file", file);
-
-                  // Ajout des paramètres de personnage et voix
-                  const url = new URL(`${API}/parent/analyze`);
-                  url.searchParams.append("voice_id", selectedChar.voiceId);
-                  url.searchParams.append("character_name", selectedChar.name);
-                  if (selectedEnfant?.age) {
-                    url.searchParams.append(
-                      "age",
-                      selectedEnfant.age.toString()
-                    );
-                  }
-
-                  try {
-                    const res = await fetch(url.toString(), {
-                      method: "POST",
-                      headers: { Authorization: `Bearer ${token}` },
-                      body: formData,
-                    });
-                    const data = await res.json();
-                    setMsg(data.message);
-
-                    if (data.audio) {
-                      const audioUrl = `data:audio/mp3;base64,${data.audio}`;
-                      setAudioSrc(audioUrl);
-                      // On réutilise le lecteur DÉJÀ débloqué pour lire la vraie voix !
-                      bgAudio.src = audioUrl;
-                      bgAudio.play().catch((e) => {
-                        console.warn("Autoplay bloqué par le navigateur : ", e);
-                      });
-                    } else {
-                      setAudioSrc(null);
-                    }
-                  } catch {
-                    setMsg(
-                      "❌ Le Superhéros est en mission, réessayez plus tard !"
-                    );
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
-                disabled={loading}
-                className="w-full py-5 rounded-2xl bg-[#F47B20] text-white font-black text-xl shadow-[0_10px_20px_rgba(244,123,32,0.4)] hover:translate-y-[-2px] active:translate-y-[2px] transition-all disabled:bg-gray-600"
-              >
-                {loading
-                  ? `⚡ ${selectedChar.name} analyse le plateau...`
-                  : `🚀 Faire parler ${selectedChar.name}`}
-              </button>
-
-              {msg && (
-                <div className="p-8 rounded-3xl bg-[#1E5C30]/40 border-l-12 border-[#F47B20] text-white animate-fade-in shadow-2xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-4 text-4xl opacity-20">
-                    {selectedChar.emoji}
-                  </div>
-                  <div className="text-xl font-bold text-[#F47B20] mb-2 uppercase tracking-widest">
-                    {selectedChar.name} dit :
-                  </div>
-                  <div className="whitespace-pre-wrap leading-relaxed text-2xl italic font-medium">
-                    {msg}
+                    disabled={loading}
+                    className="w-full py-6 rounded-2xl font-black text-white bg-linear-to-r from-[#F47B20] to-[#FF9D5C] shadow-[0_10px_30px_rgba(244,123,32,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 text-xl tracking-tighter"
+                  >
+                    {loading ? "⚡ GÉNÉRATION DE LA MISSION..." : "🚀 LANCER MA MISSION"}
+                  </button>
+                </div>
+              ) : quizSubStep === 0 ? (
+                /* --- ÉTAPE 2 : BRIEFING AUTOMATIQUE --- */
+                <div className="space-y-8 animate-fade-in text-center p-4">
+                  <div className="relative inline-block">
+                    <div className="w-48 h-48 mx-auto rounded-full border-8 border-[#F47B20] overflow-hidden shadow-2xl transform hover:scale-110 transition-transform duration-500">
+                      <img src={selectedChar.image} alt={selectedChar.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-3 shadow-lg animate-bounce">
+                      <span className="text-3xl">🎙️</span>
+                    </div>
                   </div>
                   
-                  {audioSrc && (
-                    <button
-                      onClick={() => {
-                        const audio = new Audio(audioSrc);
-                        audio.play().catch((e) => console.error(e));
-                      }}
-                      className="mt-6 w-full py-4 bg-[#F47B20] text-white font-bold text-xl rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center gap-3"
-                    >
-                      <span className="text-3xl">🔊</span>
-                      <span>Écouter le message de {selectedChar.name}</span>
-                    </button>
-                  )}
-
-                  <div className="mt-6 text-right font-black text-[#F47B20] flex items-center justify-end gap-2 text-sm uppercase">
-                    <span>Disponible dans l&apos;application Cantine+</span>
-                    <span className="text-2xl">✨</span>
+                  <div className="space-y-4">
+                    <h3 className="text-4xl font-black text-white uppercase tracking-tighter italic">Message de {selectedChar.name}</h3>
+                    <div className="bg-white/10 p-10 rounded-[40px] border border-white/20 italic text-2xl text-white leading-relaxed shadow-2xl backdrop-blur-xl relative">
+                      <span className="absolute top-4 left-6 text-6xl opacity-20 text-[#F47B20]">&quot;</span>
+                      {quizPresentation}
+                      <span className="absolute bottom-0 right-6 text-6xl opacity-20 text-[#F47B20]">&quot;</span>
+                    </div>
                   </div>
 
-                  <div className="mt-8 pt-8 border-t border-white/10 text-center animate-fade-in">
-                    <p className="text-white/90 mb-4 font-bold text-xl">
-                      Votre enfant a-t-il bien mangé son repas ?
-                    </p>
-                    <button
-                      onClick={async () => {
-                        try {
-                          await fetch(
-                            `${API}/parent/enfants/${selectedCoachEnfantId}/points`,
-                            {
+                  <button
+                    onClick={() => {
+                      setQuizSubStep(1);
+                      if (bgAudio) bgAudio.pause();
+                    }}
+                    className="w-full py-6 rounded-3xl font-black text-white bg-linear-to-r from-green-500 to-emerald-600 shadow-[0_15px_30px_rgba(34,197,94,0.4)] hover:scale-[1.05] active:scale-[0.95] transition-all flex items-center justify-center gap-4 text-2xl group"
+                  >
+                    <span>🚀 C&apos;EST PARTI POUR LE QUIZ !</span>
+                    <span className="group-hover:translate-x-2 transition-transform">➡️</span>
+                  </button>
+                </div>
+              ) : (
+                /* --- ÉTAPE 3 : LE QUIZ OU LA VICTOIRE --- */
+                <div className="w-full">
+                  {quizStep < quizQuestions.length ? (
+                    <div className="space-y-6 animate-fade-in relative">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="px-6 py-2 bg-white/10 rounded-full text-white font-black text-sm uppercase tracking-widest">
+                          Mission : {quizStep + 1} / {quizQuestions.length}
+                        </div>
+                        <div className="flex items-center gap-2 px-6 py-2 bg-yellow-400 text-black rounded-full font-black text-sm shadow-lg">
+                          ⭐ {quizScore} PTS
+                        </div>
+                      </div>
+
+                      {/* Lecture de la question */}
+                      <button
+                        onClick={async () => {
+                          const q = quizQuestions[quizStep];
+                          const text = `${q.question}. Choix 1 : ${q.options[0]}. Choix 2 : ${q.options[1]}. Choix 3 : ${q.options[2]}.`;
+                          try {
+                            const res = await fetch(`${API}/parent/tts`, {
                               method: "POST",
-                              headers,
-                              body: JSON.stringify({ points: 10 }),
+                              headers: { ...headers, "Content-Type": "application/json" },
+                              body: JSON.stringify({ text, voice_id: selectedChar.voiceId })
+                            });
+                            const data = await res.json();
+                            if (data.audio && bgAudio) {
+                              bgAudio.src = `data:audio/mp3;base64,${data.audio}`;
+                              bgAudio.play();
                             }
-                          );
-                          setMsg("");
-                          alert(
-                            "🎉 Félicitations ! 10 points ont été ajoutés !"
-                          );
-                          fetchData(user!.id); // Rafraîchir pour voir les nouveaux points
-                        } catch {
-                          alert("Erreur lors de l'ajout des points");
-                        }
-                      }}
-                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-black text-xl shadow-[0_10px_20px_rgba(34,197,94,0.3)] transition-all hover:scale-105"
-                    >
-                      🌟 Féliciter et Valider le repas (+10 points)
-                    </button>
-                  </div>
+                          } catch (e) { console.error(e); }
+                        }}
+                        className="w-full py-4 bg-white/5 hover:bg-white/10 border-2 border-dashed border-white/20 rounded-3xl text-white font-bold flex items-center justify-center gap-4 transition-all group"
+                      >
+                        <div className="w-10 h-10 bg-[#F47B20] rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                          <span className="text-xl">🔊</span>
+                        </div>
+                        <span className="text-lg">Écouter {selectedChar.name} lire la question</span>
+                      </button>
+
+                      <div className="p-8 rounded-[40px] bg-white/5 border border-white/20 shadow-3xl backdrop-blur-md relative overflow-hidden">
+                        <h3 className="text-3xl font-black text-white leading-tight mb-10 text-center">
+                          {quizQuestions[quizStep].question}
+                        </h3>
+
+                        <div className="space-y-4">
+                          {quizQuestions[quizStep].options.map((opt: string, i: number) => (
+                            <button
+                              key={i}
+                              disabled={showFeedback}
+                              onClick={() => {
+                                const isCorrect = i === quizQuestions[quizStep].answer;
+                                if (isCorrect) setQuizScore(quizScore + 50);
+                                setShowFeedback(true);
+                                
+                                setTimeout(async () => {
+                                  const feedbackText = isCorrect 
+                                    ? `Magnifique ! C'est exactement ça. ${quizQuestions[quizStep].explanation}`
+                                    : `Pas tout à fait ! Écoute bien : ${quizQuestions[quizStep].explanation}`;
+                                  try {
+                                    const res = await fetch(`${API}/parent/tts`, {
+                                      method: "POST",
+                                      headers: { ...headers, "Content-Type": "application/json" },
+                                      body: JSON.stringify({ text: feedbackText, voice_id: selectedChar.voiceId })
+                                    });
+                                    const data = await res.json();
+                                    if (data.audio && bgAudio) {
+                                      bgAudio.src = `data:audio/mp3;base64,${data.audio}`;
+                                      bgAudio.play();
+                                    }
+                                  } catch (e) { console.error(e); }
+                                }, 100);
+                              }}
+                              className={`w-full p-6 rounded-3xl text-left font-black text-xl transition-all border-4 flex items-center justify-between group ${
+                                showFeedback
+                                  ? i === quizQuestions[quizStep].answer
+                                    ? "bg-green-500/40 border-green-400 text-white shadow-[0_0_30px_rgba(34,197,94,0.3)]"
+                                    : "bg-white/5 border-white/5 text-white/20"
+                                  : "bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-[#F47B20] hover:translate-x-2"
+                              }`}
+                            >
+                              <span>{opt}</span>
+                              {showFeedback && i === quizQuestions[quizStep].answer ? (
+                                <span className="text-3xl animate-bounce">✅</span>
+                              ) : !showFeedback && (
+                                <span className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#F47B20] transition-colors font-black text-sm">
+                                  {i + 1}
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {showFeedback && (
+                        <div className="p-8 rounded-[40px] bg-linear-to-br from-[#1E5C30] to-[#064E3B] border-4 border-[#F47B20] shadow-3xl animate-slide-up relative overflow-hidden">
+                          <div className="absolute -right-4 -top-4 text-8xl opacity-10 rotate-12">🌟</div>
+                          <div className="text-[#F47B20] font-black uppercase tracking-[0.2em] mb-4 text-sm">Verdict du Héros</div>
+                          <p className="text-white text-2xl font-bold leading-relaxed mb-8">
+                            {quizQuestions[quizStep].explanation}
+                          </p>
+                          <button
+                            onClick={async () => {
+                              setShowFeedback(false);
+                              if (quizStep + 1 < quizQuestions.length) {
+                                setQuizStep(quizStep + 1);
+                              } else {
+                                try {
+                                  await fetch(`${API}/parent/enfants/${selectedCoachEnfantId}/points`, {
+                                    method: "POST",
+                                    headers,
+                                    body: JSON.stringify({ points: quizScore })
+                                  });
+                                  fetchData(user!.id);
+                                } catch (e) { console.error(e); }
+                                setQuizStep(quizQuestions.length);
+                              }
+                            }}
+                            className="w-full py-6 bg-[#F47B20] text-white font-black rounded-2xl shadow-2xl hover:scale-[1.03] active:scale-[0.97] transition-all text-xl uppercase italic tracking-tighter"
+                          >
+                            {quizStep + 1 < quizQuestions.length ? "Question Suivante ➡️" : "Découvrir mon Score Final 🎉"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* --- ÉTAPE 4 : VICTOIRE ÉPIQUE --- */
+                    <div className="py-10 space-y-10 animate-fade-in text-center relative">
+                      <div className="relative inline-block">
+                        <div className="text-[10rem] animate-bounce drop-shadow-[0_20px_40px_rgba(255,215,0,0.6)]">🏆</div>
+                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 px-10 py-4 bg-yellow-400 text-black font-black rounded-full shadow-[0_10px_30px_rgba(255,215,0,0.4)] text-3xl uppercase tracking-tighter border-4 border-white">
+                          + {quizScore} PTS
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h3 className="text-6xl font-black text-white uppercase tracking-tighter leading-none animate-pulse">
+                          MISSION RÉUSSIE !
+                        </h3>
+                        <p className="text-3xl text-white/90 font-medium max-w-lg mx-auto leading-tight">
+                          {selectedChar.name} est impressionné ! Ton intelligence protège la planète et ta santé.
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setQuizActive(false);
+                          setQuizStep(0);
+                        }}
+                        className="w-full py-8 bg-white text-black font-black rounded-[35px] hover:bg-[#F47B20] hover:text-white transition-all text-3xl shadow-[0_25px_50px_rgba(0,0,0,0.4)] group flex items-center justify-center gap-6"
+                      >
+                        <span>🔄 NOUVELLE MISSION</span>
+                        <span className="group-hover:translate-x-4 transition-transform text-4xl">➡️</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1518,7 +1646,7 @@ export default function ParentDashboard() {
                           alert("Erreur réseau");
                         }
                       }}
-                      className="w-full mt-5 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 transition-all shadow-lg hover:scale-105"
+                      className="w-full mt-5 py-3 rounded-xl font-bold text-white bg-linear-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 transition-all shadow-lg hover:scale-105"
                     >
                       Réserver ce panier
                     </button>
@@ -1584,7 +1712,7 @@ export default function ParentDashboard() {
                   </div>
                 </div>
 
-                <div className="p-8 rounded-3xl bg-gradient-to-r from-[#F47B20] to-orange-400 text-center shadow-2xl relative overflow-hidden">
+                <div className="p-8 rounded-3xl bg-linear-to-r from-[#F47B20] to-orange-400 text-center shadow-2xl relative overflow-hidden">
                   <div className="absolute -right-10 -top-10 text-9xl opacity-20">
                     🦸
                   </div>

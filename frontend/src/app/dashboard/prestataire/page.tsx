@@ -185,7 +185,7 @@ export default function PrestataireDashboard() {
 
   if (!prestaProfile)
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#1E5C30] to-[#328A4A]">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-linear-to-br from-[#1E5C30] to-[#328A4A]">
         <div className="absolute top-4 right-4 z-50">
           <LanguageSelector />
         </div>
@@ -247,7 +247,13 @@ export default function PrestataireDashboard() {
       >
         <div className="flex items-center gap-3">
           <Image src="/icone.svg" alt="logo" width={50} height={50} />
-          <Image src="/texte.svg" alt="Cantine+" width={130} height={35} />
+          <Image 
+            src="/texte.svg" 
+            alt="Cantine+" 
+            width={130} 
+            height={35} 
+            style={{ height: "auto" }}
+          />
         </div>
         <div className="flex items-center gap-4">
           <span className="text-white/80 text-sm font-medium bg-white/10 px-3 py-1 rounded-full">
@@ -386,7 +392,7 @@ export default function PrestataireDashboard() {
                         }
                       }}
                       disabled={loadingAi === menu.id}
-                      className="w-full py-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-400 hover:to-indigo-400 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1"
+                      className="w-full py-2 bg-linear-to-r from-blue-500 to-indigo-500 hover:from-blue-400 hover:to-indigo-400 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1"
                     >
                       {loadingAi === menu.id
                         ? "⏳ Analyse..."
@@ -411,152 +417,82 @@ export default function PrestataireDashboard() {
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-white">
-                📦 Récapitulatif des commandes (Prévisions)
+                📦 Récapitulatif des commandes par École (Cuisine)
               </h2>
               <button
                 onClick={() => window.print()}
                 className="px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all print:hidden flex items-center gap-2"
               >
-                🖨️ Générer PDF (Cuisine)
+                🖨️ Imprimer Bon de Cuisine
               </button>
             </div>
             {commandes.length === 0 ? (
               <p className="text-white/60">Aucune commande pour le moment.</p>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-8">
+                {/* Regroupement par Date */}
                 {Object.entries(
                   commandes.reduce((acc, curr) => {
-                    if (!acc[curr.date])
-                      acc[curr.date] = {
-                        total: 0,
-                        Viande: 0,
-                        "Sans viande": 0,
-                        Mixte: 0,
-                        allergies: [] as string[],
-                      };
-                    acc[curr.date].total += 1;
-                    const typeKey = curr.type as
-                      | "Viande"
-                      | "Sans viande"
-                      | "Mixte";
-                    if (acc[curr.date][typeKey] !== undefined)
-                      acc[curr.date][typeKey] += 1;
-
-                    // Capture des allergies
-                    const eChild = (curr as Commande).enfants;
-                    if (eChild && eChild.allergies) {
-                      acc[curr.date].allergies.push(
-                        `${eChild.prenom} ${eChild.nom} : ${
-                          eChild.allergies
-                        } (${(curr as Commande).ecoles?.nom})`
-                      );
-                    }
+                    const date = curr.date;
+                    if (!acc[date]) acc[date] = {};
+                    const schoolName = curr.ecoles?.nom || "École Inconnue";
+                    const type = curr.type || "Standard";
+                    
+                    if (!acc[date][schoolName]) acc[date][schoolName] = {};
+                    if (!acc[date][schoolName][type]) acc[date][schoolName][type] = 0;
+                    
+                    acc[date][schoolName][type] += 1;
                     return acc;
-                  }, {} as Record<string, { total: number; Viande: number; "Sans viande": number; Mixte: number; allergies: string[] }>)
+                  }, {} as Record<string, Record<string, Record<string, number>>>)
                 )
-                  .sort(
-                    ([a], [b]) => new Date(a).getTime() - new Date(b).getTime()
-                  )
-                  .map(([date, stats]) => (
-                    <div
-                      key={date}
-                      className="rounded-2xl p-6 bg-white/10 border border-white/20"
-                    >
-                      <h3 className="text-lg font-bold text-white mb-6 flex items-center justify-between">
-                        <span className="capitalize">
-                          📅{" "}
-                          {new Date(date).toLocaleDateString("fr-FR", {
-                            weekday: "long",
-                            day: "numeric",
-                            month: "long",
-                          })}
-                        </span>
-                        <span className="px-4 py-1.5 bg-[#F47B20] rounded-full text-sm font-black text-white">
-                          {stats.total} portions à préparer
-                        </span>
+                  .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+                  .map(([date, schools]) => (
+                    <div key={date} className="rounded-3xl p-6 bg-white/5 border border-white/10 overflow-hidden">
+                      <h3 className="text-lg font-black text-[#F47B20] mb-4 uppercase tracking-widest flex items-center gap-2">
+                        📅 {new Date(date).toLocaleDateString("fr-FR", { weekday: 'long', day: 'numeric', month: 'long' })}
                       </h3>
-
-                      {stats.allergies.length > 0 && (
-                        <div className="mb-6 p-4 rounded-xl bg-red-500/20 border border-red-500/50">
-                          <h4 className="font-bold text-red-400 mb-2 flex items-center gap-2">
-                            ⚠️ Attention : {stats.allergies.length} profil(s)
-                            allergique(s)
-                          </h4>
-                          <ul className="list-disc pl-5 text-sm text-white/80">
-                            {stats.allergies.map((a, i) => (
-                              <li key={i}>{a}</li>
+                      
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                          <thead>
+                            <tr className="border-b border-white/10 text-white/50 text-xs uppercase font-bold">
+                              <th className="px-4 py-3">École</th>
+                              <th className="px-4 py-3">Régime / Type</th>
+                              <th className="px-4 py-3 text-right">Quantité</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5">
+                            {Object.entries(schools).map(([schoolName, types]) => (
+                              Object.entries(types).map(([type, qty], idx) => (
+                                <tr key={`${schoolName}-${type}`} className="text-white hover:bg-white/5 transition-colors">
+                                  <td className="px-4 py-3 font-semibold">
+                                    {idx === 0 ? schoolName : ""}
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <span className={`px-2 py-1 rounded text-[10px] font-bold ${
+                                      type.toLowerCase().includes('viande') && !type.toLowerCase().includes('sans') 
+                                      ? 'bg-red-500/20 text-red-400' 
+                                      : 'bg-green-500/20 text-green-400'
+                                    }`}>
+                                      {type}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 text-right font-black text-xl text-[#F47B20]">
+                                    {qty}
+                                  </td>
+                                </tr>
+                              ))
                             ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      <div className="space-y-5">
-                        <div>
-                          <div className="flex justify-between text-sm mb-2">
-                            <span className="text-white/80 font-medium">
-                              🥩 Viande
-                            </span>
-                            <span className="text-white font-bold">
-                              {stats.Viande} portions (
-                              {((stats.Viande / stats.total) * 100).toFixed(0)}
-                              %)
-                            </span>
-                          </div>
-                          <div className="w-full bg-black/20 rounded-full h-4 overflow-hidden border border-white/5">
-                            <div
-                              className="bg-gradient-to-r from-red-500 to-red-400 h-4 rounded-full transition-all duration-500"
-                              style={{
-                                width: `${(stats.Viande / stats.total) * 100}%`,
-                              }}
-                            ></div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between text-sm mb-2">
-                            <span className="text-white/80 font-medium">
-                              🥗 Sans viande (Végétarien)
-                            </span>
-                            <span className="text-white font-bold">
-                              {stats["Sans viande"]} portions (
-                              {(
-                                (stats["Sans viande"] / stats.total) *
-                                100
-                              ).toFixed(0)}
-                              %)
-                            </span>
-                          </div>
-                          <div className="w-full bg-black/20 rounded-full h-4 overflow-hidden border border-white/5">
-                            <div
-                              className="bg-gradient-to-r from-green-500 to-green-400 h-4 rounded-full transition-all duration-500"
-                              style={{
-                                width: `${
-                                  (stats["Sans viande"] / stats.total) * 100
-                                }%`,
-                              }}
-                            ></div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between text-sm mb-2">
-                            <span className="text-white/80 font-medium">
-                              🥘 Mixte
-                            </span>
-                            <span className="text-white font-bold">
-                              {stats.Mixte} portions (
-                              {((stats.Mixte / stats.total) * 100).toFixed(0)}%)
-                            </span>
-                          </div>
-                          <div className="w-full bg-black/20 rounded-full h-4 overflow-hidden border border-white/5">
-                            <div
-                              className="bg-gradient-to-r from-yellow-500 to-yellow-400 h-4 rounded-full transition-all duration-500"
-                              style={{
-                                width: `${(stats.Mixte / stats.total) * 100}%`,
-                              }}
-                            ></div>
-                          </div>
-                        </div>
+                          </tbody>
+                          <tfoot>
+                            <tr className="bg-white/5">
+                              <td colSpan={2} className="px-4 py-3 font-bold text-white">TOTAL JOURNÉE</td>
+                              <td className="px-4 py-3 text-right font-black text-2xl text-white">
+                                {Object.values(schools).reduce((total, types) => total + Object.values(types).reduce((t, q) => t + q, 0), 0)}
+                              </td>
+                            </tr>
+                          </tfoot>
+                        </table>
                       </div>
                     </div>
                   ))}
@@ -610,7 +546,7 @@ export default function PrestataireDashboard() {
             </div>
 
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="p-8 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-2xl relative overflow-hidden">
+              <div className="p-8 rounded-3xl bg-linear-to-br from-blue-600 to-indigo-700 text-white shadow-2xl relative overflow-hidden">
                 <div className="absolute -right-10 -bottom-10 text-9xl opacity-20">
                   📊
                 </div>
@@ -623,7 +559,7 @@ export default function PrestataireDashboard() {
                   partenaires.
                 </p>
               </div>
-              <div className="p-8 rounded-3xl bg-gradient-to-br from-[#1E5C30] to-[#328A4A] text-white shadow-2xl relative overflow-hidden">
+              <div className="p-8 rounded-3xl bg-linear-to-br from-[#1E5C30] to-[#328A4A] text-white shadow-2xl relative overflow-hidden">
                 <div className="absolute -right-10 -bottom-10 text-9xl opacity-20">
                   🍃
                 </div>

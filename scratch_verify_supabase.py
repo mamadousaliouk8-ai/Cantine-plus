@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
+from postgrest import CountMethod
 
 # Use the same logic as db.py
 load_dotenv(dotenv_path=".env")
@@ -18,7 +19,7 @@ print(f"Testing connection to {SUPABASE_URL} with Service Role Key...")
 
 try:
     # Test reading from a table that might have RLS
-    res = supabase.table("ecoles").select("*", count="exact").execute()
+    res = supabase.table("ecoles").select("*", count=CountMethod.exact).execute()
     print(f"✅ Success! Found {res.count} schools.")
     
     # Test reading from auth.users (requires service role / admin privileges)

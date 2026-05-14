@@ -1,4 +1,4 @@
-from db import supabase
+from backend.db import supabase
 import sys
 
 def cleanup():

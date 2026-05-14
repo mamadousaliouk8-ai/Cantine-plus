@@ -110,7 +110,78 @@ Exemple de sortie attendue:
     except Exception as e:
         return f"Problème technique de {character_name} : {str(e)}"
 
+def analyze_meal_debrief(menu_description, character_name="un Superhéros", child_name="", age=None):
+    """
+    Génère un message d'IA pour débriefer le repas de midi sans photo, basé sur le menu.
+    """
+    if not VISION_API_KEY or "your_" in VISION_API_KEY:
+        return f"Salut {child_name} ! En tant que {character_name}, j'ai vu que tu as eu un super menu aujourd'hui : {menu_description}. J'espère que tu as tout mangé pour être en pleine forme comme moi !"
+
+    try:
+        age_instruction = f"L'enfant a {age} ans." if age else ""
+        model = genai.GenerativeModel('gemini-flash-latest')
+        prompt = f"""Tu es {character_name}. Parle directement à {child_name} ({age_instruction}). 
+Il/Elle a mangé ce menu à la cantine aujourd'hui : {menu_description}.
+Félicite-le/la pour ses choix, explique-lui pourquoi c'est bon pour sa croissance d'avoir mangé ces aliments spécifiques. 
+Pose-lui une question encourageante à la fin.
+Sois TRÈS court (40-60 mots maximum), énergique et reste parfaitement dans ton personnage.
+"""
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"Erreur de communication avec {character_name} : {str(e)}"
+
 import edge_tts
+
+def generate_culinary_quiz(menu_description, character_name="un Superhéros", child_name="", age=None):
+    """
+    Génère un texte de présentation héroïque ET un quiz de 3 questions basés sur le menu.
+    """
+    if not VISION_API_KEY or "your_" in VISION_API_KEY:
+        # Version simulée si pas de clé
+        return {
+            "presentation": f"Salut {child_name} ! Ici {character_name}. Demain, tu vas manger : {menu_description}. Sais-tu que les légumes donnent des super-pouvoirs ?",
+            "quiz": [
+                {
+                    "question": "Quel aliment du menu donne de la force ?",
+                    "options": ["Le dessert sucré", "Les légumes verts", "Le pain"],
+                    "answer": 1,
+                    "explanation": "Les légumes verts sont pleins de fer et de vitamines !"
+                }
+            ]
+        }
+
+    try:
+        model = genai.GenerativeModel('gemini-flash-latest')
+        prompt = f"""Tu es {character_name}. Prépare une mission culinaire pour {child_name} ({age if age else 'enfant'}).
+Le menu futur est : {menu_description}.
+
+1. Écris un discours d'introduction (60 mots max) où tu présentes le menu avec enthousiasme et tu donnes des indices sur les bienfaits (vitamines, énergie, croissance). Ce texte sera lu en audio.
+2. Génère un QUIZ de 3 questions simples à choix multiples (3 options par question) basé sur ce menu et les bienfaits mentionnés.
+
+Format de sortie attendu (JSON uniquement) :
+{{
+  "presentation": "Texte du héros...",
+  "quiz": [
+    {{
+      "question": "La question...",
+      "options": ["Option A", "Option B", "Option C"],
+      "answer": 0,
+      "explanation": "Pourquoi c'est la bonne réponse..."
+    }}
+  ]
+}}
+"""
+        response = model.generate_content(prompt)
+        # Nettoyage du JSON
+        text = response.text
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if match:
+            return json.loads(match.group(0))
+        return json.loads(text)
+    except Exception as e:
+        print(f"Erreur Quiz IA: {e}")
+        return None
 
 async def generate_superhero_voice(text, voice_id=None):
     """

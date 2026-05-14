@@ -6,9 +6,30 @@ import sys
 import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../utils"))
-from ai_waste import analyze_waste_image
+from ai_waste import analyze_waste_image, analyze_qualitative_waste
 
 router = APIRouter()
+
+class QualitativeWasteData(BaseModel):
+    date: str
+    kg: float
+    satisfaction: str
+    menu_standard: str
+    menu_vege: str
+
+@router.post("/analyze-qualitative")
+async def analyze_qualitative(data: QualitativeWasteData):
+    try:
+        analysis = analyze_qualitative_waste(
+            data.date, 
+            data.kg, 
+            data.satisfaction, 
+            data.menu_standard, 
+            data.menu_vege
+        )
+        return {"analysis": analysis}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/create-admin")
 def create_school_admin(data: dict, user: dict = Depends(get_current_user)):

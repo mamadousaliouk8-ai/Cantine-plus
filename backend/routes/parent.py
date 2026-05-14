@@ -7,9 +7,77 @@ import os
 
 # Ajouter le chemin vers utils pour importer ai_coach
 sys.path.append(os.path.join(os.path.dirname(__file__), "../utils"))
-from ai_coach import analyze_meal_image, generate_superhero_voice
+from ai_coach import analyze_meal_image, generate_superhero_voice, analyze_meal_debrief, generate_culinary_quiz
 
 router = APIRouter()
+
+class QuizRequest(BaseModel):
+    menu_description: str
+    character_name: str
+    child_name: str
+    age: Optional[int] = None
+    voice_id: Optional[str] = None
+
+@router.post("/tts")
+async def get_tts(data: dict):
+    text = data.get("text")
+    voice_id = data.get("voice_id", "fr-FR-DeniseNeural")
+    if not text:
+        return {"error": "No text"}
+    
+    audio_base64 = await generate_superhero_voice(text, voice_id)
+    return {"audio": audio_base64}
+
+@router.post("/quiz")
+async def get_quiz(data: QuizRequest):
+    try:
+        # 1. Générer Quiz + Texte présentation
+        quiz_data = generate_culinary_quiz(
+            data.menu_description, 
+            data.character_name, 
+            data.child_name, 
+            data.age
+        )
+        if not quiz_data:
+            raise HTTPException(status_code=500, detail="Erreur génération quiz")
+        
+        # 2. Générer Audio pour la présentation
+        audio_b64 = await generate_superhero_voice(quiz_data["presentation"], data.voice_id)
+        
+        return {
+            "presentation": quiz_data["presentation"],
+            "quiz": quiz_data["quiz"],
+            "audio": audio_b64
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class DebriefData(BaseModel):
+    menu_description: str
+    character_name: str
+    child_name: str
+    age: Optional[int] = None
+    voice_id: Optional[str] = None
+
+@router.post("/debrief")
+async def debrief_meal(data: DebriefData):
+    try:
+        # 1. Génération du texte
+        result_text = analyze_meal_debrief(
+            data.menu_description, 
+            data.character_name, 
+            data.child_name, 
+            data.age
+        )
+        # 2. Génération de la voix
+        audio_b64 = await generate_superhero_voice(result_text, data.voice_id)
+        
+        return {
+            "message": result_text,
+            "audio": audio_b64
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 from supabase import create_client
 import os

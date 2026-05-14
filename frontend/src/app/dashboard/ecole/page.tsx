@@ -59,6 +59,7 @@ export default function EcoleDashboard() {
   const [setupNom, setSetupNom] = useState("");
   const [loadingSetup, setLoadingSetup] = useState(false);
   const [pointageMode, setPointageMode] = useState(false);
+  const [filterClasse, setFilterClasse] = useState("Toutes");
   const [prestataires, setPrestataires] = useState<
     { id: string; nom: string }[]
   >([]);
@@ -366,7 +367,13 @@ export default function EcoleDashboard() {
       >
         <div className="flex items-center gap-3">
           <Image src="/icone.svg" alt="logo" width={40} height={40} />
-          <Image src="/texte.svg" alt="Cantine+" width={110} height={30} />
+          <Image 
+            src="/texte.svg" 
+            alt="Cantine+" 
+            width={110} 
+            height={30} 
+            style={{ height: "auto" }}
+          />
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
           <span className="text-white/80 text-xs sm:text-sm font-medium bg-white/10 px-3 py-1 rounded-full text-center">
@@ -436,16 +443,43 @@ export default function EcoleDashboard() {
 
         {tab === "reservations" && (
           <div>
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
               <h2 className="text-xl font-bold text-white">
                 📋 Réservations de votre école
               </h2>
-              <button
-                onClick={() => setPointageMode(!pointageMode)}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all flex items-center gap-2"
-              >
-                {pointageMode ? "🔙 Vue Tableau" : "📱 Mode Pointage Rapide"}
-              </button>
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <select
+                  value={filterClasse}
+                  onChange={(e) => setFilterClasse(e.target.value)}
+                  className="px-4 py-2 bg-white/10 text-white border border-white/20 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-[#F47B20]"
+                >
+                  <option value="Toutes" className="text-black">🏢 Toutes les classes</option>
+                  <optgroup label="Maternelle" className="text-black">
+                    <option value="PS1">PS1</option>
+                    <option value="PS2">PS2</option>
+                    <option value="PS3">PS3</option>
+                    <option value="MS1">MS1</option>
+                    <option value="MS2">MS2</option>
+                    <option value="MS3">MS3</option>
+                    <option value="GS1">GS1</option>
+                    <option value="GS2">GS2</option>
+                    <option value="GS3">GS3</option>
+                  </optgroup>
+                  <optgroup label="Primaire" className="text-black">
+                    {["CP", "CE1", "CE2", "CM1", "CM2"].map(lvl => (
+                      ["A", "B", "C"].map(suffix => (
+                        <option key={`${lvl}-${suffix}`} value={`${lvl}-${suffix}`}>{lvl}-{suffix}</option>
+                      ))
+                    )).flat()}
+                  </optgroup>
+                </select>
+                <button
+                  onClick={() => setPointageMode(!pointageMode)}
+                  className="flex-1 md:flex-none px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all flex items-center gap-2 justify-center"
+                >
+                  {pointageMode ? "🔙 Vue Tableau" : "📱 Mode Pointage Rapide"}
+                </button>
+              </div>
             </div>
 
             {reservations.length === 0 ? (
@@ -454,7 +488,10 @@ export default function EcoleDashboard() {
               </p>
             ) : pointageMode ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {reservations.map((r) => (
+                 {reservations
+                  .filter(r => filterClasse === "Toutes" || r.enfants?.classe === filterClasse)
+                  .sort((a, b) => (a.enfants?.nom || "").localeCompare(b.enfants?.nom || "") || (a.enfants?.prenom || "").localeCompare(b.enfants?.prenom || ""))
+                  .map((r) => (
                   <div
                     key={r.id}
                     className="p-5 rounded-2xl border bg-white/10"
@@ -466,7 +503,7 @@ export default function EcoleDashboard() {
                     }}
                   >
                     <div className="font-black text-xl text-white mb-1">
-                      {r.enfants?.prenom} {r.enfants?.nom}
+                      {(r.enfants?.nom || "").toUpperCase()} {r.enfants?.prenom}
                     </div>
                     <div className="text-white/70 text-sm mb-4">
                       Classe : {r.enfants?.classe}
@@ -558,7 +595,10 @@ export default function EcoleDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {reservations.map((r, i) => (
+                    {reservations
+                      .filter(r => filterClasse === "Toutes" || r.enfants?.classe === filterClasse)
+                      .sort((a, b) => (a.enfants?.nom || "").localeCompare(b.enfants?.nom || "") || (a.enfants?.prenom || "").localeCompare(b.enfants?.prenom || ""))
+                      .map((r, i) => (
                       <tr
                         key={r.id}
                         style={{
@@ -573,7 +613,7 @@ export default function EcoleDashboard() {
                           {new Date(r.date).toLocaleDateString("fr-FR")}
                         </td>
                         <td className="px-4 py-3 text-white text-sm font-medium">
-                          {r.enfants?.prenom} {r.enfants?.nom}
+                          {(r.enfants?.nom || "").toUpperCase()} {r.enfants?.prenom}
                           {r.enfants?.allergies && (
                             <span className="ml-2 px-2 py-0.5 rounded text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse">
                               ⚠️ Allergie: {r.enfants.allergies}
@@ -806,7 +846,7 @@ export default function EcoleDashboard() {
               <button
                 type="submit"
                 disabled={loadingSetup}
-                className="w-full py-4 rounded-xl font-black text-white bg-[#F47B20] shadow-[0_10px_20px_rgba(244,123,32,0.3)] hover:translate-y-[-2px] active:translate-y-[1px] transition-all disabled:opacity-50"
+                className="w-full py-4 rounded-xl font-black text-white bg-[#F47B20] shadow-[0_10px_20px_rgba(244,123,32,0.3)] hover:translate-y-[-2px] active:translate-y-px transition-all disabled:opacity-50"
               >
                 {loadingSetup
                   ? "⚡ CRÉATION EN COURS..."
@@ -856,7 +896,7 @@ export default function EcoleDashboard() {
                 </div>
               ))}
             </div>
-            <div className="mt-10 p-8 rounded-3xl bg-gradient-to-r from-[#F47B20] to-[#FF9D5C] text-white shadow-2xl">
+            <div className="mt-10 p-8 rounded-3xl bg-linear-to-r from-[#F47B20] to-[#FF9D5C] text-white shadow-2xl">
               <h3 className="text-xl font-black mb-2">💡 Le saviez-vous ?</h3>
               <p className="opacity-90">
                 Les rapports PDF incluent désormais une analyse prédictive basée
@@ -1018,8 +1058,23 @@ function GaspillageForm({
 }) {
   const [date, setDate] = useState("");
   const [kgJetes, setKgJetes] = useState<number | "">("");
+  const [satisfaction, setSatisfaction] = useState("😐 Neutre");
   const [aiAnalysis, setAiAnalysis] = useState("");
   const [loadingAi, setLoadingAi] = useState(false);
+  const [dayMenus, setDayMenus] = useState<any[]>([]);
+
+  // Charger les menus quand la date change
+  useEffect(() => {
+    if (date) {
+      fetch(`${API}/ecole/menus`)
+        .then((r) => r.json())
+        .then((data) => {
+          const filtered = data.filter((m: any) => m.date === date);
+          setDayMenus(filtered);
+        })
+        .catch(() => console.error("Erreur menus"));
+    }
+  }, [date]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1031,30 +1086,41 @@ function GaspillageForm({
         ecole_id: ecoleId,
         date,
         kg_jetes: Number(kgJetes),
+        satisfaction, // On peut l'enregistrer aussi en base si on veut
       }),
     });
-    onMsg("✅ Déchets enregistrés ! Cela sera visible sur le bilan carbone.");
+    onMsg("✅ Relevé et satisfaction enregistrés !");
     setKgJetes("");
   };
 
-  const analyzeImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const runQualitativeAI = async () => {
+    if (!date || kgJetes === "") {
+      alert("Veuillez saisir la date et le poids avant de lancer l'analyse.");
+      return;
+    }
     setLoadingAi(true);
     setAiAnalysis("");
 
-    const formData = new FormData();
-    formData.append("file", file);
+    const menuStandard = dayMenus.find(m => !m.type.toLowerCase().includes('végétarien'))?.plat || "Non défini";
+    const menuVege = dayMenus.find(m => m.type.toLowerCase().includes('végétarien'))?.plat || "Non défini";
 
     try {
-      const res = await fetch(`${API}/ecole/analyze-waste`, {
+      const res = await fetch(`${API}/ecole/analyze-qualitative`, {
         method: "POST",
-        headers: { Authorization: headers["Authorization"] },
-        body: formData,
+        headers: { 
+          ...headers,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          date,
+          kg: Number(kgJetes),
+          satisfaction,
+          menu_standard: menuStandard,
+          menu_vege: menuVege
+        }),
       });
       const data = await res.json();
-      setAiAnalysis(data.analysis || "Impossible d'analyser l'image.");
+      setAiAnalysis(data.analysis || "Impossible d'analyser les données.");
     } catch {
       setAiAnalysis("❌ Erreur de connexion à l'IA.");
     } finally {
@@ -1063,95 +1129,136 @@ function GaspillageForm({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 animate-fade-in">
+      {/* Colonne GAUCHE : Saisie des données */}
       <div
-        className="rounded-2xl p-6"
-        style={{
-          background: "rgba(255,255,255,0.1)",
-          border: "1px solid rgba(255,255,255,0.2)",
-        }}
+        className="rounded-3xl p-8 backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl"
       >
-        <h2 className="text-xl font-bold text-white mb-4">
-          🗑️ Relevé manuel du Gaspillage
+        <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+          <span className="text-3xl">📊</span> Relevé Qualitatif du Jour
         </h2>
-        <p className="text-white/80 text-sm mb-6 bg-red-500/20 p-3 rounded-lg border border-red-500/40">
-          Saisissez ici le poids total des déchets alimentaires jetés
-          aujourd&apos;hui.
-        </p>
-        <form onSubmit={submit} className="space-y-4">
+        
+        <form onSubmit={submit} className="space-y-6">
           <div>
-            <label className="block text-white/80 text-sm mb-1">Date</label>
+            <label className="block text-white/70 text-xs font-bold uppercase tracking-widest mb-2 ml-1">Date du service</label>
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
               required
-              className="w-full px-4 py-2.5 rounded-xl text-gray-900"
-              style={{ background: "white" }}
+              className="w-full px-5 py-4 rounded-2xl bg-white text-black font-bold focus:ring-4 focus:ring-red-500/30 outline-none transition-all shadow-inner"
             />
           </div>
+
           <div>
-            <label className="block text-white/80 text-sm mb-1">
-              Poids total jeté (en Kg)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              value={kgJetes}
-              onChange={(e) =>
-                setKgJetes(e.target.value === "" ? "" : Number(e.target.value))
-              }
-              required
-              placeholder="Ex: 12.5"
-              className="w-full px-4 py-2.5 rounded-xl text-gray-900 font-bold"
-              style={{ background: "white" }}
-            />
+            <label className="block text-white/70 text-xs font-bold uppercase tracking-widest mb-2 ml-1">Poids jeté en Cuisine & Plateau (Kg)</label>
+            <div className="relative">
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                value={kgJetes}
+                onChange={(e) => setKgJetes(e.target.value === "" ? "" : Number(e.target.value))}
+                required
+                placeholder="Ex: 15.4"
+                className="w-full px-5 py-4 rounded-2xl bg-white text-black text-2xl font-black focus:ring-4 focus:ring-red-500/30 outline-none transition-all shadow-inner"
+              />
+              <span className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">KG</span>
+            </div>
           </div>
+
+          <div>
+            <label className="block text-white/70 text-xs font-bold uppercase tracking-widest mb-4 ml-1">Humeur / Satisfaction des enfants</label>
+            <div className="grid grid-cols-4 gap-3">
+              {[
+                { label: "🤩 Génial", emoji: "🤩", color: "from-yellow-400 to-orange-500" },
+                { label: "🙂 Bon", emoji: "🙂", color: "from-green-400 to-green-600" },
+                { label: "😐 Neutre", emoji: "😐", color: "from-blue-400 to-blue-600" },
+                { label: "☹️ Déçu", emoji: "☹️", color: "from-red-400 to-red-600" },
+              ].map((s) => (
+                <button
+                  key={s.label}
+                  type="button"
+                  onClick={() => setSatisfaction(s.label)}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-300 ${
+                    satisfaction === s.label 
+                    ? `bg-linear-to-br ${s.color} border-white scale-105 shadow-xl` 
+                    : "bg-white/5 border-white/10 grayscale opacity-50 hover:grayscale-0 hover:opacity-100"
+                  }`}
+                >
+                  <span className="text-3xl">{s.emoji}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-center mt-3 text-white font-black uppercase text-[10px] tracking-widest opacity-80">
+              Selectionné : {satisfaction}
+            </p>
+          </div>
+
           <button
             type="submit"
-            className="w-full py-3 rounded-xl font-bold text-white mt-2 transition-all hover:scale-[1.02]"
-            style={{ background: "#ef4444" }}
+            className="w-full py-5 rounded-2xl font-black text-white bg-linear-to-r from-red-600 to-red-500 shadow-xl hover:translate-y-[-2px] active:translate-y-px transition-all"
           >
-            Enregistrer le relevé
+            📥 ENREGISTRER LES DONNÉES
           </button>
         </form>
       </div>
 
-      <div className="rounded-2xl p-6 border-2 border-dashed border-green-500/50 bg-green-500/10 flex flex-col justify-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 text-6xl opacity-10">🤖</div>
-        <h2 className="text-xl font-bold text-green-400 mb-2">
-          📸 Analyse IA Qualitative
-        </h2>
-        <p className="text-white/80 text-sm mb-6">
-          Prenez une photo de la poubelle. Notre IA identifiera ce qui a été
-          jeté et vous proposera des solutions pour demain.
-        </p>
+      {/* Colonne DROITE : Menu & IA */}
+      <div className="space-y-6">
+        {/* Affichage du Menu */}
+        <div className="rounded-3xl p-6 bg-white/5 border border-white/10 backdrop-blur-md">
+          <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest mb-4">🍽️ Menu servi ce jour</h3>
+          {date === "" ? (
+            <p className="text-white/40 italic text-sm">Sélectionnez une date pour voir le menu...</p>
+          ) : dayMenus.length === 0 ? (
+            <p className="text-yellow-400/80 italic text-sm">Aucun menu trouvé pour cette date.</p>
+          ) : (
+            <div className="space-y-4">
+              {dayMenus.map(m => (
+                <div key={m.id} className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase mb-2 inline-block ${m.type.toLowerCase().includes('vége') ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'}`}>
+                    {m.type}
+                  </span>
+                  <p className="text-white font-bold text-sm leading-tight">{m.plat}</p>
+                  <p className="text-white/50 text-xs mt-1">{m.entree} | {m.dessert}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-        <label className="w-full py-4 bg-green-500 hover:bg-green-400 text-white font-bold rounded-xl text-center cursor-pointer transition-all shadow-lg">
-          {loadingAi
-            ? "⏳ Analyse en cours..."
-            : "Prendre une photo / Uploader"}
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={analyzeImage}
-            disabled={loadingAi}
-          />
-        </label>
+        {/* Bloc IA Qualitative */}
+        <div className="rounded-3xl p-8 bg-linear-to-br from-green-600/20 to-emerald-900/40 border-2 border-green-500/30 relative overflow-hidden group">
+          <div className="absolute -right-10 -top-10 text-9xl opacity-10 group-hover:rotate-12 transition-transform duration-700">🤖</div>
+          
+          <h3 className="text-2xl font-black text-green-400 mb-2 flex items-center gap-2">
+            🧠 Analyse Qualitative IA
+          </h3>
+          <p className="text-white/70 text-sm mb-6">
+            L&apos;IA croise le menu, les déchets et l&apos;avis des enfants pour vous donner le conseil ultime.
+          </p>
 
-        {aiAnalysis && (
-          <div className="mt-6 p-4 bg-black/40 rounded-xl border border-green-500/30 animate-fade-in">
-            <h3 className="text-green-300 font-bold mb-2">
-              💡 Rapport de l&apos;IA :
-            </h3>
-            <p className="text-white/90 text-sm whitespace-pre-wrap leading-relaxed">
-              {aiAnalysis}
-            </p>
-          </div>
-        )}
+          <button
+            onClick={runQualitativeAI}
+            disabled={loadingAi || !date || kgJetes === ""}
+            className="w-full py-4 rounded-2xl bg-green-500 hover:bg-green-400 text-white font-black text-lg shadow-lg shadow-green-500/30 transition-all disabled:bg-gray-600 disabled:shadow-none"
+          >
+            {loadingAi ? "⚡ RÉFLEXION IA..." : "🚀 LANCER L'ANALYSE QUALITATIVE"}
+          </button>
+
+          {aiAnalysis && (
+            <div className="mt-6 p-6 bg-black/40 rounded-2xl border-l-8 border-green-500 animate-slide-up shadow-2xl">
+              <div className="text-green-400 font-black uppercase text-[10px] tracking-widest mb-2">Verdict de l&apos;IA :</div>
+              <p className="text-white text-lg font-medium leading-relaxed italic">
+                {aiAnalysis}
+              </p>
+              <div className="mt-4 flex justify-end">
+                <span className="text-[10px] text-white/40 uppercase font-bold tracking-tighter">Powered by Gemini Flash 1.5</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

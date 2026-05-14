@@ -1,4 +1,14 @@
 {
-    "typeCheckingMode": "off",
-    "ignore": ["**/*"]
+    "include": ["backend"],
+    "extraPaths": ["./backend"],
+    "venvPath": ".",
+    "venv": ".venv",
+    "executionEnvironments": [
+        {
+            "root": "backend",
+            "extraPaths": ["."]
+        }
+    ],
+    "typeCheckingMode": "basic",
+    "pythonVersion": "3.14"
 }

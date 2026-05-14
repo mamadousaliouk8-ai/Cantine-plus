@@ -7,13 +7,13 @@ import os
 
 load_dotenv()
 
+from db import supabase, SUPABASE_KEY
 from routes import auth, parent, ecole, prestataire, admin
 
 app = FastAPI(title="Cantine+ API", version="1.0.0")
 
 @app.get("/health")
 def health_check():
-    from db import supabase, SUPABASE_KEY
     import uuid
     service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     

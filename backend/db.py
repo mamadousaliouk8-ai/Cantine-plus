@@ -22,13 +22,8 @@ ANON_KEY = os.environ.get("SUPABASE_KEY")
 # On utilise la clé de service si elle existe, sinon la clé anon
 SUPABASE_KEY = SERVICE_KEY if SERVICE_KEY else ANON_KEY
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    print("❌ ERROR: Supabase credentials missing (URL or KEY)!")
-
-if SERVICE_KEY:
-    print(f"✅ RLS BYPASS: Using SERVICE_ROLE KEY (Prefix: {SERVICE_KEY[:10]}...)")
-else:
-    print("⚠️ WARNING: Using ANON KEY - RLS will likely block database operations")
-
 # Initialisation du client unique
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("❌ CRITICAL ERROR: Supabase credentials missing (URL or KEY)!")
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)

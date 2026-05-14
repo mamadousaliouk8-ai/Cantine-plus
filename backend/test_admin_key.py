@@ -6,6 +6,10 @@ load_dotenv() # Charge le .env local
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
+if not url or not key:
+    print("❌ Error: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing!")
+    exit(1)
+
 print(f"Testing with URL: {url}")
 print(f"Key prefix: {key[:10]}...")
 

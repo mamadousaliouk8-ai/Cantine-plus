@@ -99,10 +99,17 @@ export default function LoginPage() {
           alt="Cantine+ icône"
           width={120}
           height={120}
-          className="mb-0"
-          style={{ marginBottom: "-8px" }}
+          priority
+          style={{ marginBottom: "-8px", height: "auto" }}
         />
-        <Image src="/texte.svg" alt="Cantine+" width={280} height={70} />
+        <Image 
+          src="/texte.svg" 
+          alt="Cantine+" 
+          width={280} 
+          height={70} 
+          priority
+          style={{ height: "auto" }}
+        />
         <p className="text-white/70 text-sm tracking-widest mt-2 font-light">
           MOINS DE GASPILLAGE, PLUS DE SENS.
         </p>

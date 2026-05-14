@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
-from db import supabase
-from routes.auth import get_current_user
+from backend.db import supabase
+from backend.routes.auth import get_current_user
+from postgrest import CountMethod
 
 router = APIRouter()
 
@@ -16,7 +17,7 @@ def get_global_stats(user: dict = Depends(get_current_user)):
         total_kg_jetes = sum(float(item.get("kg_jetes", 0)) for item in gaspillage_res.data) if gaspillage_res.data else 0
 
         # 2. Total Invendus Sauvés (filtré par école si besoin)
-        query_inv = supabase.table("reservations_invendus").select("id", count="exact")
+        query_inv = supabase.table("reservations_invendus").select("id", count=CountMethod.exact)
         if linked_id: query_inv = query_inv.eq("ecole_id", linked_id)
         try:
             invendus_res = query_inv.execute()
