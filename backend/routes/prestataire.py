@@ -1,16 +1,17 @@
+import os
+import io
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
-from db import supabase
+from supabase import create_client
+from typing import Any, Dict, cast
 import pandas as pd
-import io
-from utils.ai_waste import analyze_menu_optimization
+from db import supabase  # type: ignore[import]
+from utils.ai_waste import analyze_menu_optimization  # type: ignore[import]
 
 router = APIRouter()
 
-from supabase import create_client
-import os
-_url = os.environ.get("SUPABASE_URL")
-_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+_url = os.environ.get("SUPABASE_URL") or ""
+_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or ""
 admin_client = create_client(_url, _key)
 
 
@@ -18,6 +19,12 @@ class MenuConseilRequest(BaseModel):
     entree: str
     plat: str
     dessert: str
+
+
+class ProfileData(BaseModel):
+    user_id: str
+    nom: str
+
 
 @router.post("/menus/{menu_id}/conseil")
 def get_menu_conseil(menu_id: str, data: MenuConseilRequest):
@@ -27,9 +34,6 @@ def get_menu_conseil(menu_id: str, data: MenuConseilRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class ProfileData(BaseModel):
-    user_id: str
-    nom: str
 
 @router.get("/profile/{user_id}")
 def get_profile(user_id: str):
@@ -39,6 +43,7 @@ def get_profile(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/profile")
 def create_profile(data: ProfileData):
     try:
@@ -46,6 +51,7 @@ def create_profile(data: ProfileData):
         return {"message": "Profil créé !"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/menus/{prestataire_id}")
 def get_menus(prestataire_id: str):
@@ -55,11 +61,13 @@ def get_menus(prestataire_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/menus/import/{prestataire_id}")
 async def import_menus(prestataire_id: str, file: UploadFile = File(...)):
     try:
         content = await file.read()
-        if file.filename.endswith(".csv"):
+        filename = file.filename or ""
+        if filename.endswith(".csv"):
             df = pd.read_csv(io.BytesIO(content))
         else:
             df = pd.read_excel(io.BytesIO(content), engine="openpyxl")
@@ -69,7 +77,7 @@ async def import_menus(prestataire_id: str, file: UploadFile = File(...)):
         for _, row in df.iterrows():
             try:
                 date_obj = pd.to_datetime(str(row.get("Date (JJ/MM/AAAA)", "")), dayfirst=True).date()
-                data = {
+                menu_data = {
                     "prestataire_id": prestataire_id,
                     "date": str(date_obj),
                     "type": str(row.get("Type", "Viande")).strip(),
@@ -78,21 +86,22 @@ async def import_menus(prestataire_id: str, file: UploadFile = File(...)):
                     "dessert": str(row.get("Dessert", "")).strip(),
                     "bio": str(row.get("Bio (Oui/Non)", "Non")).strip().lower() in ["oui", "yes", "true", "1"],
                 }
-                if data["plat"]:
-                    admin_client.table("menus").insert(data).execute()
+                if menu_data["plat"]:
+                    admin_client.table("menus").insert(menu_data).execute()
                     succes += 1
-            except:
+            except Exception:
                 erreurs += 1
 
         return {"succes": succes, "erreurs": erreurs}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/commandes/{prestataire_id}")
 def get_commandes(prestataire_id: str):
     try:
         ecoles = admin_client.table("ecoles").select("id, nom").eq("prestataire_id", prestataire_id).execute()
-        ecole_ids = [e["id"] for e in ecoles.data]
+        ecole_ids = [cast(Dict[str, Any], e)["id"] for e in ecoles.data]
         if not ecole_ids:
             return []
         res = admin_client.table("reservations").select("*, ecoles(nom), enfants(nom, prenom, allergies)").in_("ecole_id", ecole_ids).execute()
