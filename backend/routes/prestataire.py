@@ -3,11 +3,7 @@ from pydantic import BaseModel
 from db import supabase
 import pandas as pd
 import io
-import sys
-import os
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "../../utils"))
-from ai_waste import analyze_menu_optimization
+from utils.ai_waste import analyze_menu_optimization
 
 router = APIRouter()
 

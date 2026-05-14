@@ -2,11 +2,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from pydantic import BaseModel
 from db import supabase
 from routes.auth import get_current_user
-import sys
-import os
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "../../utils"))
-from ai_waste import analyze_waste_image, analyze_qualitative_waste
+from utils.ai_waste import analyze_waste_image, analyze_qualitative_waste
 
 router = APIRouter()
 
