@@ -1,4 +1,4 @@
-from backend.db import supabase
+from db import supabase
 import uuid
 
 def test_insert():

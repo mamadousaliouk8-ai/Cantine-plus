@@ -1,10 +1,5 @@
-# Pyrefly configuration for Cantine+
-# This tells Pyrefly where to look for Python modules
+# Root pyrefly config — covers Python files outside backend/ (scripts, data, etc.)
+# The backend/ directory has its own pyrefly.toml anchored to backend/ as the import root.
 
 [project]
-# Include only the backend directory for Python analysis
-include = ["backend/**/*.py"]
-
-[python]
-# Add backend as a search path so `from db import ...` resolves correctly
-search_path = ["backend"]
+include = ["*.py", "data/**/*.py"]

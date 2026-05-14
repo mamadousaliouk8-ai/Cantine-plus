@@ -1,0 +1,7 @@
+# Pyrefly configuration for the backend package
+# Placing this file inside backend/ makes pyrefly infer the import root as backend/,
+# which matches the Docker WORKDIR /app layout.
+# Bare imports like `from db import supabase` are correct here.
+
+[project]
+include = ["**/*.py"]

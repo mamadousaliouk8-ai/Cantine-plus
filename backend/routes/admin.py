@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
-from backend.db import supabase
-from backend.routes.auth import get_current_user
+from db import supabase
+from routes.auth import get_current_user
 from postgrest import CountMethod
 
 router = APIRouter()
