@@ -1,5 +1,6 @@
 import os
 import google.genai as genai
+from google.genai import types
 import io
 import base64
 import json
@@ -91,17 +92,22 @@ Exemple de sortie attendue:
   "confidence": 0.88
 }}
 """
-        contents = [
-            prompt,
-            {"mime_type": "image/jpeg", "data": image_bytes}
-        ]
-
+        contents = types.Content(
+            role="user",
+            parts=[
+                types.Part.from_text(text=prompt),
+                types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
+            ]
+        )
+        
         response = client_genai.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-flash-latest',
             contents=contents
         )
         text_response = response.text
-
+        if not text_response:
+            return "Continue ta mission, champion ! Ton repas va t'aider à grandir et à avoir plein de force !"
+            
         # Tenter de parser le JSON
         match = re.search(r'\{.*\}', text_response, re.DOTALL)
         if match:
@@ -150,13 +156,13 @@ def generate_culinary_quiz(menu_description, character_name="un Superhéros", ch
     """
     if not client_genai:
         return {
-            "presentation": f"Salut {child_name} ! Ici {character_name}. Demain, tu vas manger : {menu_description}. Sais-tu que les légumes donnent des super-pouvoirs ?",
+            "presentation": f"Salut {child_name} ! Ici {character_name}. Demain, un super menu t'attend : {menu_description}. J'ai hâte que tu découvres ces saveurs pour devenir un vrai champion !",
             "quiz": [
                 {
-                    "question": "Quel aliment du menu donne de la force ?",
-                    "options": ["Le dessert sucré", "Les légumes verts", "Le pain"],
-                    "answer": 1,
-                    "explanation": "Les légumes verts sont pleins de fer et de vitamines !"
+                    "question": "Quel est l'élément le plus important du repas ?",
+                    "options": ["S'amuser et bien manger", "Manger des bonbons", "Ne rien manger"],
+                    "answer": 0,
+                    "explanation": "Exactement ! Bien manger te donne toute la force nécessaire !"
                 }
             ]
         }
@@ -165,43 +171,71 @@ def generate_culinary_quiz(menu_description, character_name="un Superhéros", ch
         prompt = f"""Tu es {character_name}. Prépare une mission culinaire pour {child_name} ({age if age else 'enfant'}).
 Le menu futur est : {menu_description}.
 
-1. Écris un discours d'introduction (60 mots max) où tu présentes le menu avec enthousiasme et tu donnes des indices sur les bienfaits (vitamines, énergie, croissance). Ce texte sera lu en audio.
-2. Génère un QUIZ de 3 questions simples à choix multiples (3 options par question) basé sur ce menu et les bienfaits mentionnés.
+1. Écris un discours d'introduction IMMERSIF (100 mots max) où tu incarnes TOTALEMENT {character_name}. 
+   - INTERDICTION STRICTE : Ne commence jamais par "Demain, un super menu t'attend" ou toute phrase générique similaire. 
+   - COMMENCE DIRECTEMENT dans l'action ou l'univers du personnage.
+   - Ne te contente pas de lister les aliments, raconte une mini-aventure liée au menu : {menu_description}. 
+   - Pour chaque aliment, invente un bénéfice héroïque ou magique (ex: "Le saumon te donne une mémoire d'éléphant pour tes devoirs !", "Les brocolis sont des petits arbres de force brute !"). 
+   - Utilise ton langage de personnage (ex: "Nom d'un petit bonhomme !" pour un héros, "C'est givré !" pour Elsa). 
+   - Ce texte sera lu en audio et DOIT contenir les indices nécessaires pour répondre au quiz.
+
+2. Génère un QUIZ de 3 questions simples et amusantes basées sur ton histoire.
 
 Format de sortie attendu (JSON uniquement) :
 {{
-  "presentation": "Texte du héros...",
+  "presentation": "Salut [Prénom] ! Ici [Ton Nom] ! Prêt pour une mission givrée ? Demain, on va manger [Menu] car ça va nous donner [Bénéfices]...",
   "quiz": [
     {{
-      "question": "La question...",
-      "options": ["Option A", "Option B", "Option C"],
+      "question": "D'après moi, pourquoi est-ce super de manger le plat de demain ?",
+      "options": ["Pour courir plus vite", "Pour avoir des oreilles de lapin", "Pour devenir invisible"],
       "answer": 0,
-      "explanation": "Pourquoi c'est la bonne réponse..."
+      "explanation": "Exactement ! C'est le secret de ma super-vitesse !"
     }}
   ]
 }}
 """
         response = client_genai.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-flash-latest',
             contents=prompt
         )
         text = response.text
+        if not text:
+            raise ValueError("L'IA a renvoyé une réponse vide.")
+            
+        # Nettoyage plus robuste du JSON
         match = re.search(r'\{.*\}', text, re.DOTALL)
         if match:
-            return json.loads(match.group(0))
+            json_str = match.group(0)
+            try:
+                return json.loads(json_str)
+            except json.JSONDecodeError:
+                # Si le premier match échoue, on tente de nettoyer les balises markdown
+                json_str = json_str.replace("```json", "").replace("```", "").strip()
+                return json.loads(json_str)
+        
         return json.loads(text)
     except Exception as e:
-        print(f"Erreur Quiz IA: {e}")
-        return None
+        print(f"Erreur Quiz IA (Gemini): {e}")
+        # Fallback dynamique et moins robotique
+        return {
+            "presentation": f"Salut {child_name} ! Ici {character_name}. Demain, prépare-toi pour une mission gourmande avec ce menu : {menu_description}. J'ai déjà hâte d'y être, pas toi ?",
+            "quiz": [
+                {
+                    "question": f"D'après {character_name}, pourquoi est-ce génial de manger à la cantine ?",
+                    "options": ["Pour devenir super fort", "Pour dormir", "Pour s'ennuyer"],
+                    "answer": 0,
+                    "explanation": "C'est ça ! Chaque repas est une étape de plus pour ta croissance !"
+                }
+            ]
+        }
 
 
 async def generate_superhero_voice(text, voice_id=None):
     """
     Génère un fichier audio en base64 via edge-tts (voix neuronales gratuites).
     """
+    voice = voice_id if voice_id and voice_id != "default" else "fr-FR-RemyMultilingualNeural"
     try:
-        voice = voice_id if voice_id and voice_id != "default" else "fr-FR-JeromeNeural"
-
         communicate = edge_tts.Communicate(text, voice)
         audio_data = b""
         async for chunk in communicate.stream():
@@ -211,5 +245,8 @@ async def generate_superhero_voice(text, voice_id=None):
         audio_b64 = base64.b64encode(audio_data).decode()
         return audio_b64
     except Exception as e:
-        print(f"Erreur Audio (edge-tts): {e}")
+        err_msg = f"DEBUG: Erreur Audio (edge-tts) pour text='{text[:20]}...' voice='{voice}': {e}"
+        print(err_msg)
+        with open("coach_error.log", "a") as f:
+            f.write(err_msg + "\n")
         return None

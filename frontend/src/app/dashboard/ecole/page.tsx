@@ -89,7 +89,7 @@ export default function EcoleDashboard() {
           fetch(`${API}/ecole/reservations/${ecoleId}`, { headers }).then((r) =>
             r.json()
           ),
-          fetch(`${API}/ecole/menus`, { headers }).then((r) => r.json()),
+          fetch(`${API}/ecole/menus?ecole_id=${ecoleId}`, { headers }).then((r) => r.json()),
         ]);
         setReservations(Array.isArray(res) ? res : []);
         setMenus(Array.isArray(m) ? m : []);
@@ -490,7 +490,12 @@ export default function EcoleDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                  {reservations
                   .filter(r => filterClasse === "Toutes" || r.enfants?.classe === filterClasse)
-                  .sort((a, b) => (a.enfants?.nom || "").localeCompare(b.enfants?.nom || "") || (a.enfants?.prenom || "").localeCompare(b.enfants?.prenom || ""))
+                  .sort((a, b) => 
+                    (a.date || "").localeCompare(b.date || "") || 
+                    (a.enfants?.classe || "").localeCompare(b.enfants?.classe || "") || 
+                    (a.enfants?.nom || "").localeCompare(b.enfants?.nom || "") || 
+                    (a.enfants?.prenom || "").localeCompare(b.enfants?.prenom || "")
+                  )
                   .map((r) => (
                   <div
                     key={r.id}
@@ -597,7 +602,12 @@ export default function EcoleDashboard() {
                   <tbody>
                     {reservations
                       .filter(r => filterClasse === "Toutes" || r.enfants?.classe === filterClasse)
-                      .sort((a, b) => (a.enfants?.nom || "").localeCompare(b.enfants?.nom || "") || (a.enfants?.prenom || "").localeCompare(b.enfants?.prenom || ""))
+                      .sort((a, b) => 
+                        (a.date || "").localeCompare(b.date || "") || 
+                        (a.enfants?.classe || "").localeCompare(b.enfants?.classe || "") || 
+                        (a.enfants?.nom || "").localeCompare(b.enfants?.nom || "") || 
+                        (a.enfants?.prenom || "").localeCompare(b.enfants?.prenom || "")
+                      )
                       .map((r, i) => (
                       <tr
                         key={r.id}
@@ -1058,7 +1068,11 @@ function GaspillageForm({
 }) {
   const [date, setDate] = useState("");
   const [kgJetes, setKgJetes] = useState<number | "">("");
-  const [satisfaction, setSatisfaction] = useState("😐 Neutre");
+  const [itemRatings, setItemRatings] = useState<Record<string, string>>({
+    entree: "😐 Neutre",
+    plat: "😐 Neutre",
+    dessert: "😐 Neutre"
+  });
   const [aiAnalysis, setAiAnalysis] = useState("");
   const [loadingAi, setLoadingAi] = useState(false);
   const [dayMenus, setDayMenus] = useState<any[]>([]);
@@ -1086,7 +1100,6 @@ function GaspillageForm({
         ecole_id: ecoleId,
         date,
         kg_jetes: Number(kgJetes),
-        satisfaction, // On peut l'enregistrer aussi en base si on veut
       }),
     });
     onMsg("✅ Relevé et satisfaction enregistrés !");
@@ -1114,7 +1127,7 @@ function GaspillageForm({
         body: JSON.stringify({
           date,
           kg: Number(kgJetes),
-          satisfaction,
+          satisfaction: `Entrée: ${itemRatings.entree} | Plat: ${itemRatings.plat} | Dessert: ${itemRatings.dessert}`,
           menu_standard: menuStandard,
           menu_vege: menuVege
         }),
@@ -1129,7 +1142,7 @@ function GaspillageForm({
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 animate-fade-in">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start animate-fade-in">
       {/* Colonne GAUCHE : Saisie des données */}
       <div
         className="rounded-3xl p-8 backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl"
@@ -1167,33 +1180,7 @@ function GaspillageForm({
             </div>
           </div>
 
-          <div>
-            <label className="block text-white/70 text-xs font-bold uppercase tracking-widest mb-4 ml-1">Humeur / Satisfaction des enfants</label>
-            <div className="grid grid-cols-4 gap-3">
-              {[
-                { label: "🤩 Génial", emoji: "🤩", color: "from-yellow-400 to-orange-500" },
-                { label: "🙂 Bon", emoji: "🙂", color: "from-green-400 to-green-600" },
-                { label: "😐 Neutre", emoji: "😐", color: "from-blue-400 to-blue-600" },
-                { label: "☹️ Déçu", emoji: "☹️", color: "from-red-400 to-red-600" },
-              ].map((s) => (
-                <button
-                  key={s.label}
-                  type="button"
-                  onClick={() => setSatisfaction(s.label)}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-300 ${
-                    satisfaction === s.label 
-                    ? `bg-linear-to-br ${s.color} border-white scale-105 shadow-xl` 
-                    : "bg-white/5 border-white/10 grayscale opacity-50 hover:grayscale-0 hover:opacity-100"
-                  }`}
-                >
-                  <span className="text-3xl">{s.emoji}</span>
-                </button>
-              ))}
-            </div>
-            <p className="text-center mt-3 text-white font-black uppercase text-[10px] tracking-widest opacity-80">
-              Selectionné : {satisfaction}
-            </p>
-          </div>
+
 
           <button
             type="submit"
@@ -1220,8 +1207,57 @@ function GaspillageForm({
                   <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase mb-2 inline-block ${m.type.toLowerCase().includes('vége') ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'}`}>
                     {m.type}
                   </span>
-                  <p className="text-white font-bold text-sm leading-tight">{m.plat}</p>
-                  <p className="text-white/50 text-xs mt-1">{m.entree} | {m.dessert}</p>
+                  
+                  {/* Entrée */}
+                  <div className="mb-4">
+                    <p className="text-white/50 text-[10px] uppercase font-black mb-1">Entrée</p>
+                    <p className="text-white font-bold text-sm mb-2">{m.entree || "Non définie"}</p>
+                    <div className="flex gap-2">
+                      {["🤩", "🙂", "😐", "☹️"].map(emoji => (
+                        <button
+                          key={emoji}
+                          onClick={() => setItemRatings(prev => ({...prev, entree: emoji}))}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${itemRatings.entree === emoji ? 'bg-white/20 border border-white/40 scale-110 shadow-lg' : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Plat */}
+                  <div className="mb-4">
+                    <p className="text-white/50 text-[10px] uppercase font-black mb-1">Plat Principal</p>
+                    <p className="text-white font-bold text-sm mb-2">{m.plat}</p>
+                    <div className="flex gap-2">
+                      {["🤩", "🙂", "😐", "☹️"].map(emoji => (
+                        <button
+                          key={emoji}
+                          onClick={() => setItemRatings(prev => ({...prev, plat: emoji}))}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${itemRatings.plat === emoji ? 'bg-white/20 border border-white/40 scale-110 shadow-lg' : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dessert */}
+                  <div className="">
+                    <p className="text-white/50 text-[10px] uppercase font-black mb-1">Dessert</p>
+                    <p className="text-white font-bold text-sm mb-2">{m.dessert || "Non défini"}</p>
+                    <div className="flex gap-2">
+                      {["🤩", "🙂", "😐", "☹️"].map(emoji => (
+                        <button
+                          key={emoji}
+                          onClick={() => setItemRatings(prev => ({...prev, dessert: emoji}))}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${itemRatings.dessert === emoji ? 'bg-white/20 border border-white/40 scale-110 shadow-lg' : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

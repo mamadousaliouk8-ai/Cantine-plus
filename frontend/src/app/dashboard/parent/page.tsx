@@ -38,8 +38,10 @@ type Invendu = {
 };
 
 const getBadge = (points: number) => {
-  if (points >= 100) return "🌍 Sauveur de Planète";
-  if (points >= 50) return "🦸 Héros en herbe";
+  if (points >= 500) return "👑 Gardien de la Terre";
+  if (points >= 300) return "🌟 Maître de la Nature";
+  if (points >= 150) return "🌍 Sauveur de Planète";
+  if (points >= 70) return "🦸 Héros en herbe";
   return "🌱 Apprenti Écolo";
 };
 
@@ -373,13 +375,13 @@ export default function ParentDashboard() {
       name: "Chase",
       emoji: "🐕",
       image: "/heroes/chase.jpg",
-      voiceId: "fr-BE-GerardNeural",
+      voiceId: "fr-FR-HenriNeural",
     },
     {
       name: "Marcus",
       emoji: "🚒",
       image: "/heroes/marcus.jpg",
-      voiceId: "fr-CA-AntoineNeural",
+      voiceId: "fr-FR-RemyMultilingualNeural",
     },
     {
       name: "Batman",
@@ -439,8 +441,8 @@ export default function ParentDashboard() {
         }}
       >
         <div className="flex items-center gap-3">
-          <Image src="/icone.svg" alt="logo" width={40} height={40} />
-          <Image src="/texte.svg" alt="Cantine+" width={110} height={30} />
+          <Image src="/icone.svg" alt="logo" width={40} height={40} style={{ width: 'auto', height: 'auto' }} />
+          <Image src="/texte.svg" alt="Cantine+" width={110} height={30} style={{ width: 'auto', height: 'auto' }} />
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
           <span className="text-white/80 text-xs sm:text-sm font-medium bg-white/10 px-3 py-1 rounded-full">
@@ -1243,6 +1245,21 @@ export default function ParentDashboard() {
                   treeLabel = "Chêne Majestueux";
                   maxPts = 300;
                 }
+                if (pts >= 300) {
+                  treeEmoji = "🌲";
+                  treeLabel = "Sapin Éternel";
+                  maxPts = 600;
+                }
+                if (pts >= 600) {
+                  treeEmoji = "🍎";
+                  treeLabel = "Arbre Fruitier Magique";
+                  maxPts = 1000;
+                }
+                if (pts >= 1000) {
+                  treeEmoji = "✨";
+                  treeLabel = "Forêt Enchantée";
+                  maxPts = 1000;
+                }
                 const progress = Math.min(100, (pts / maxPts) * 100);
 
                 return (
@@ -1314,7 +1331,7 @@ export default function ParentDashboard() {
                       }
                       try {
                         const targetEnfant = enfants.find(e => e.id === selectedCoachEnfantId);
-                        const menuRes = await fetch(`${API}/parent/menus`);
+                        const menuRes = await fetch(`${API}/parent/menus`, { headers });
                         const menus = await menuRes.json();
                         const dayMenu = menus.filter((m: any) => m.date === quizDate);
                         
@@ -1338,6 +1355,12 @@ export default function ParentDashboard() {
                           })
                         });
                         const data = await quizRes.json();
+                        if (!quizRes.ok) throw new Error(data.detail || "Erreur API Quiz");
+                        
+                        if (!data.quiz || !data.presentation) {
+                           throw new Error("L'IA n'a pas pu générer la mission. Réessaie !");
+                        }
+
                         setQuizQuestions(data.quiz);
                         setQuizPresentation(data.presentation);
                         setQuizActive(true);
@@ -1448,7 +1471,7 @@ export default function ParentDashboard() {
                               disabled={showFeedback}
                               onClick={() => {
                                 const isCorrect = i === quizQuestions[quizStep].answer;
-                                if (isCorrect) setQuizScore(quizScore + 50);
+                                if (isCorrect) setQuizScore(quizScore + 5);
                                 setShowFeedback(true);
                                 
                                 setTimeout(async () => {

@@ -124,7 +124,9 @@ def add_message(data: MessageData):
 @router.get("/reservations/{ecole_id}")
 def get_reservations(ecole_id: str):
     try:
-        res = supabase.table("reservations").select("*, enfants(nom, prenom, classe, allergies)").eq("ecole_id", ecole_id).execute()
+        res = admin_client.table("reservations").select(
+            "*, enfants(nom, prenom, classe, allergies, pai)"
+        ).eq("ecole_id", ecole_id).order("date", desc=False).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -133,16 +135,28 @@ def get_reservations(ecole_id: str):
 @router.put("/reservations/{reservation_id}/absent")
 def mark_absent(reservation_id: str):
     try:
-        supabase.table("reservations").update({"status": "Absent"}).eq("id", reservation_id).execute()
+        admin_client.table("reservations").update({"status": "Absent"}).eq("id", reservation_id).execute()
         return {"message": "Statut mis à jour en Absent."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/menus")
-def get_menus():
+def get_menus(ecole_id: Optional[str] = None):
+    """Retourne les menus du prestataire lié à l'école (via ecole_id),
+    ou tous les menus si aucun ecole_id fourni."""
     try:
-        res = supabase.table("menus").select("*").order("date").execute()
+        if ecole_id:
+            # Récupérer le prestataire_id lié à cette école
+            ecole_res = admin_client.table("ecoles").select("prestataire_id").eq("id", ecole_id).execute()
+            if ecole_res.data and ecole_res.data[0].get("prestataire_id"):
+                prestataire_id = ecole_res.data[0]["prestataire_id"]
+                res = admin_client.table("menus").select("*").eq("prestataire_id", prestataire_id).order("date").execute()
+            else:
+                # Pas de prestataire lié : retourner tous les menus disponibles
+                res = admin_client.table("menus").select("*").order("date").execute()
+        else:
+            res = admin_client.table("menus").select("*").order("date").execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
